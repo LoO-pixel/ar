@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>AR Tisch-Test (MindAR)</title>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+<style>
+  body { margin: 0; overflow: hidden; font-family: -apple-system, sans-serif; }
+  #status {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+    z-index: 10; padding: 10px 16px; border-radius: 20px;
+    background: rgba(0,0,0,.65); color: #fff; font-size: 15px; white-space: nowrap;
+  }
+  #status.ok { background: rgba(30,130,60,.8); }
+</style>
+</head>
+<body>
+<div id="status">Marker-Bild suchen …</div>
+
+<!-- targets.mind = dein kompiliertes Marker-Bild, liegt neben dieser Datei -->
+<a-scene mindar-image="imageTargetSrc: ./targets.mind; uiScanning: no; uiLoading: no; filterMinCF: 0.0001; filterBeta: 0.001; missTolerance: 10"
+         color-space="sRGB"
+         renderer="colorManagement: true; antialias: true; alpha: true"
+         vr-mode-ui="enabled: false"
+         device-orientation-permission-ui="enabled: false">
+
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+  <a-entity id="ziel" mindar-image-target="targetIndex: 0">
+
+    <!-- Bei MindAR liegt das Bild in der XY-Ebene, Z zeigt aus dem Bild heraus.
+         rotation="90 0 0" stellt die Welt aufrecht auf das Bild.
+         1 Einheit = Bildbreite. Die Welt ist 2x2 groß, mit scale 0.5 also genau so breit wie das Bild.
+         Größer machen: scale erhöhen, z. B. "1 1 1" = doppelte Bildbreite. -->
+    <a-entity id="welt" rotation="90 0 0" scale="0.5 0.5 0.5">
+
+      <!-- Boden -->
+      <a-box position="0 -0.05 0" width="2" height="0.1" depth="2" color="#5a9e4b"></a-box>
+      <!-- Weg -->
+      <a-box position="0 0.005 0" width="0.3" height="0.01" depth="2" color="#c9b27a"></a-box>
+      <!-- Teich -->
+      <a-cylinder position="0.6 0.006 0.55" radius="0.28" height="0.01" color="#3f8fd0"></a-cylinder>
+
+      <!-- Haus -->
+      <a-box position="-0.55 0.2 -0.45" width="0.45" height="0.4" depth="0.4" color="#e8dcc0"></a-box>
+      <a-cone position="-0.55 0.53 -0.45" radius-bottom="0.4" radius-top="0" height="0.28"
+              segments-radial="4" rotation="0 45 0" color="#b5482f"></a-cone>
+      <a-box position="-0.55 0.11 -0.245" width="0.1" height="0.2" depth="0.01" color="#5b3a1e"></a-box>
+
+      <!-- Bäume -->
+      <a-entity position="0.6 0 -0.6">
+        <a-cylinder position="0 0.1 0" radius="0.04" height="0.2" color="#6b4423"></a-cylinder>
+        <a-cone position="0 0.38 0" radius-bottom="0.18" radius-top="0" height="0.4" color="#2f6b2f"></a-cone>
+      </a-entity>
+      <a-entity position="0.8 0 -0.2" scale="0.7 0.7 0.7">
+        <a-cylinder position="0 0.1 0" radius="0.04" height="0.2" color="#6b4423"></a-cylinder>
+        <a-cone position="0 0.38 0" radius-bottom="0.18" radius-top="0" height="0.4" color="#3b7d3b"></a-cone>
+      </a-entity>
+      <a-entity position="-0.7 0 0.6" scale="0.85 0.85 0.85">
+        <a-cylinder position="0 0.1 0" radius="0.04" height="0.2" color="#6b4423"></a-cylinder>
+        <a-cone position="0 0.38 0" radius-bottom="0.18" radius-top="0" height="0.4" color="#2f6b2f"></a-cone>
+      </a-entity>
+
+      <!-- Spielfigur: läuft den Weg auf und ab -->
+      <a-entity position="0 0 0.8"
+                animation="property: position; from: 0 0 0.8; to: 0 0 -0.8; dur: 4000; dir: alternate; loop: true; easing: easeInOutSine">
+        <a-entity animation="property: position; from: 0 0 0; to: 0 0.06 0; dur: 250; dir: alternate; loop: true; easing: easeOutQuad">
+          <a-cylinder position="0 0.1 0" radius="0.06" height="0.2" color="#d64545"></a-cylinder>
+          <a-sphere position="0 0.26 0" radius="0.07" color="#f2c9a0"></a-sphere>
+        </a-entity>
+      </a-entity>
+
+      <!-- Schwebender Kristall -->
+      <a-octahedron position="0.6 0.35 0.55" radius="0.1" color="#ffd84a"
+                    animation="property: rotation; to: 0 360 0; dur: 3000; loop: true; easing: linear"
+                    animation__hover="property: position; from: 0.6 0.3 0.55; to: 0.6 0.42 0.55; dur: 1200; dir: alternate; loop: true; easing: easeInOutSine">
+      </a-octahedron>
+
+      <!-- EIGENES MODELL von itch.io:
+           model.glb neben diese Datei legen, die Zeile unten einkommentieren
+           und scale anpassen, bis die Größe stimmt. -->
+      <!-- <a-entity gltf-model="url(model.glb)" position="0 0 0" scale="0.5 0.5 0.5"></a-entity> -->
+
+    </a-entity>
+  </a-entity>
+
+  <a-entity light="type: ambient; intensity: 0.8"></a-entity>
+  <a-entity light="type: directional; intensity: 0.7" position="1 2 1"></a-entity>
+</a-scene>
+
+<script>
+  const ziel = document.getElementById('ziel');
+  const status = document.getElementById('status');
+  ziel.addEventListener('targetFound', () => {
+    status.textContent = 'Marker erkannt';
+    status.classList.add('ok');
+  });
+  ziel.addEventListener('targetLost', () => {
+    status.textContent = 'Marker-Bild suchen …';
+    status.classList.remove('ok');
+  });
+</script>
+</body>
+</html>
