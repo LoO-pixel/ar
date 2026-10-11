@@ -193,13 +193,36 @@ const ORTE={
  kiosk:{name:'Pilz-Kiosk',im:'im Pilz-Kiosk',tile:[34,26],parz:'F',tuer:'kiosk'},
  buero:{name:'Büro',im:'im blauen Bürohaus',tile:[44,12],parz:'E',tuer:'block'}
 };
+// 25 Jobs in drei Läden, jeweils als Leiter: erf = nötige Schichten im selben Laden
 const JOBS=[
- {id:'lager',name:'Regale einräumen',ort:'bau',wert:'fle',min:3,stufe:1,dauer:2,lohn:12},
- {id:'kiosk',name:'Pilze verkaufen',ort:'kiosk',wert:'cha',min:5,stufe:1,dauer:5,lohn:30},
- {id:'akten',name:'Akten sortieren',ort:'buero',wert:'int',min:4,stufe:1,dauer:5,lohn:28},
- {id:'koch',name:'Pilzpfanne braten',ort:'kiosk',wert:'kre',min:5,stufe:2,dauer:15,lohn:80},
- {id:'bau',name:'Kunden beim Bauen helfen',ort:'bau',wert:'kra',min:5,stufe:2,dauer:30,lohn:150},
- {id:'code',name:'Programmieren',ort:'buero',wert:'int',min:7,stufe:3,dauer:60,lohn:320}
+ // Baumarkt
+ {id:'lager',name:'Regale einräumen',ort:'bau',wert:'fle',min:3,stufe:1,erf:0,dauer:2,lohn:12},
+ {id:'wagen',name:'Einkaufswagen sammeln',ort:'bau',wert:'kra',min:3,stufe:1,erf:0,dauer:3,lohn:17},
+ {id:'farbe',name:'Farben mischen',ort:'bau',wert:'kre',min:4,stufe:1,erf:0,dauer:5,lohn:28},
+ {id:'kasse',name:'An der Kasse sitzen',ort:'bau',wert:'cha',min:4,stufe:2,erf:3,dauer:8,lohn:46},
+ {id:'berater',name:'Kunden beraten',ort:'bau',wert:'int',min:5,stufe:2,erf:3,dauer:12,lohn:70},
+ {id:'bau',name:'Kunden beim Bauen helfen',ort:'bau',wert:'kra',min:5,stufe:2,erf:5,dauer:30,lohn:150},
+ {id:'werkstatt',name:'Werkstatt leiten',ort:'bau',wert:'kra',min:7,stufe:3,erf:10,dauer:45,lohn:255},
+ {id:'baumarktchef',name:'Baumarkt führen',ort:'bau',wert:'fle',min:7,stufe:4,erf:25,dauer:60,lohn:390},
+ // Pilz-Kiosk
+ {id:'flyer',name:'Flyer verteilen',ort:'kiosk',wert:'fle',min:3,stufe:1,erf:0,dauer:3,lohn:16},
+ {id:'putzen',name:'Pilze putzen',ort:'kiosk',wert:'fle',min:4,stufe:1,erf:0,dauer:4,lohn:22},
+ {id:'kiosk',name:'Pilze verkaufen',ort:'kiosk',wert:'cha',min:5,stufe:1,erf:0,dauer:5,lohn:30},
+ {id:'schleppen',name:'Lieferungen schleppen',ort:'kiosk',wert:'kra',min:5,stufe:2,erf:3,dauer:10,lohn:56},
+ {id:'koch',name:'Pilzpfanne braten',ort:'kiosk',wert:'kre',min:5,stufe:2,erf:3,dauer:15,lohn:82},
+ {id:'stamm',name:'Stammkunden betreuen',ort:'kiosk',wert:'cha',min:7,stufe:3,erf:5,dauer:25,lohn:150},
+ {id:'rezept',name:'Neue Rezepte erfinden',ort:'kiosk',wert:'kre',min:7,stufe:3,erf:10,dauer:30,lohn:185},
+ {id:'kioskchef',name:'Kiosk führen',ort:'kiosk',wert:'cha',min:8,stufe:4,erf:25,dauer:60,lohn:400},
+ // Büro im blauen Haus
+ {id:'kaffee',name:'Kaffee kochen',ort:'buero',wert:'cha',min:3,stufe:1,erf:0,dauer:2,lohn:11},
+ {id:'post',name:'Post verteilen',ort:'buero',wert:'fle',min:3,stufe:1,erf:0,dauer:3,lohn:16},
+ {id:'akten',name:'Akten sortieren',ort:'buero',wert:'int',min:4,stufe:1,erf:0,dauer:5,lohn:28},
+ {id:'telefon',name:'Telefondienst',ort:'buero',wert:'cha',min:5,stufe:2,erf:3,dauer:10,lohn:56},
+ {id:'tabellen',name:'Tabellen pflegen',ort:'buero',wert:'int',min:5,stufe:2,erf:3,dauer:15,lohn:86},
+ {id:'plakat',name:'Plakate gestalten',ort:'buero',wert:'kre',min:6,stufe:2,erf:5,dauer:20,lohn:118},
+ {id:'code',name:'Programmieren',ort:'buero',wert:'int',min:7,stufe:3,erf:10,dauer:60,lohn:330},
+ {id:'projekt',name:'Projekte leiten',ort:'buero',wert:'int',min:8,stufe:4,erf:10,dauer:45,lohn:310},
+ {id:'geschaeft',name:'Firma führen',ort:'buero',wert:'int',min:9,stufe:5,erf:25,dauer:90,lohn:640}
 ];
 const jobVon=m=>JOBS.find(j=>j.id===m.job.id);
 
@@ -312,7 +335,7 @@ const schlafenszeit=h=>h<6; // Minis gehen erst um Mitternacht ins Bett
 
 // ---------- Jahreszeit und Wetter ----------
 // Jahreszeit nach Datum; Wetter ist je Tag und 3-Stunden-Abschnitt ausgewürfelt (kein echtes Wetter, die Seite hat kein Internet)
-const JZ=['Frühling','Sommer','Herbst','Winter'],WT={sonne:'Sonne',regen:'Regen',nebel:'Nebel',schnee:'Schnee'};
+const JZ=['Frühling','Sommer','Herbst','Winter'],WT={normal:'Normal',sonne:'Sonne',regen:'Regen',nebel:'Nebel',schnee:'Schnee'};
 let testJZ=null,testWetter=null;
 const jahreszeitEcht=()=>{const m=new Date().getMonth();return m<2||m===11?3:m<5?0:m<8?1:2};
 const jahreszeit=()=>testJZ===null?jahreszeitEcht():testJZ;
@@ -320,9 +343,10 @@ function zufall01(n){let x=(n^0x9e3779b9)>>>0;x=Math.imul(x^x>>>16,0x85ebca6b);x
 function wetterEcht(){
   const d=new Date(),abschnitt=Math.floor(d.getHours()/3),s=jahreszeit();
   const r=zufall01((d.getFullYear()*372+d.getMonth()*31+d.getDate())*8+abschnitt);
-  let [sonne,nass]=[[.5,.36],[.7,.22],[.38,.36],[.4,.36]][s]; // Rest ist Nebel
-  if(abschnitt===1||abschnitt===2)sonne-=.15; // früh morgens öfter Nebel
-  return r<sonne?'sonne':r<sonne+nass?(s===3?'schnee':'regen'):'nebel';
+  // normal = ganz gewöhnliches Wetter ohne Besonderheit; der Rest nach Sonne und Nässe ist Nebel
+  let [normal,sonne,nass]=[[.36,.26,.24],[.3,.45,.17],[.36,.16,.3],[.36,.16,.3]][s];
+  if(abschnitt===1||abschnitt===2)normal-=.15; // früh morgens öfter Nebel
+  return r<normal?'normal':r<normal+sonne?'sonne':r<normal+sonne+nass?(s===3?'schnee':'regen'):'nebel';
 }
 const wetter=()=>testWetter||wetterEcht();
 // Umfärben: Grün wird im Herbst oliv (Boden) oder bunt (Laub), im Winter zu Schnee; Wasser im Winter zu Eis
@@ -374,11 +398,11 @@ function wetterZeichnen(t){
     for(let i=0;i<18;i++){const sp=20+(i%5)*7,x=um(TEIL[i+60][0]*vw+Math.sin(t*.9+i*2)*26+t*9,vw),y=um(TEIL[i+60][1]*vh+t*sp,vh);ctx.fillStyle=farben[i%3];ctx.fillRect(x,y,3,2)}}
   ctx.restore();
 }
-const WETTERTON={sonne:[1,1,1],regen:[.72,.78,.88],nebel:[.9,.92,.95],schnee:[.88,.9,.97]};
+const WETTERTON={normal:[1,1,1],sonne:[1,.985,.93],regen:[.72,.78,.88],nebel:[.9,.92,.95],schnee:[.88,.9,.97]};
 function testBlatt(){
   blatt('Zeit und Wetter','Normal richtet sich alles nach Uhr und Datum deines Handys. Das Wetter ist ausgewürfelt, nicht das echte von draußen. Hier kannst du alles zum Ausprobieren umschalten.',[
     {titel:'Tageszeit',text:modus?phase(MODI[modus])+' (Test)':'Echtzeit',knopf:'Weiter',fn:()=>{modus=(modus+1)%MODI.length;testBlatt()}},
-    {titel:'Wetter',text:testWetter?WT[testWetter]+' (Test)':WT[wetter()]+' (nach Datum)',knopf:'Weiter',fn:()=>{const k=[null,'sonne','regen','nebel','schnee'];testWetter=k[(k.indexOf(testWetter)+1)%k.length];testBlatt()}},
+    {titel:'Wetter',text:testWetter?WT[testWetter]+' (Test)':WT[wetter()]+' (nach Datum)',knopf:'Weiter',fn:()=>{const k=[null,'normal','sonne','regen','nebel','schnee'];testWetter=k[(k.indexOf(testWetter)+1)%k.length];testBlatt()}},
     {titel:'Jahreszeit',text:testJZ===null?JZ[jahreszeit()]+' (nach Datum)':JZ[testJZ]+' (Test)',knopf:'Weiter',fn:()=>{testJZ=testJZ===null?0:testJZ===3?null:testJZ+1;testBlatt()}},
     {titel:'Alles echt',text:'Zurück zu Uhr und Datum',knopf:'Zurück',fn:()=>{modus=0;testWetter=null;testJZ=null}},
     {titel:'Neues Spiel',text:'Löscht den Spielstand und würfelt einen neuen ersten Mini',knopf:'Neu …',fn:()=>blatt('Wirklich neu anfangen?','Münzen, Minis, Freundschaften, Karrieren und die Serie gehen verloren. Das lässt sich nicht rückgängig machen.',[
@@ -425,7 +449,7 @@ function launeBonus(m){
   if(hat(m,'morgenmuffel')&&h>=5&&h<11)b-=12;
   if(hat(m,'nachteule'))b+=(h>=20||h<3)?10:(h>=6&&h<10?-8:0);
   if(hat(m,'regenfan'))b+=wt==='regen'||wt==='nebel'?12:0;else if(wt==='regen')b-=4;
-  if(hat(m,'sonnenkind'))b+=wt==='sonne'?10:-8;
+  if(hat(m,'sonnenkind'))b+=wt==='sonne'?10:wt==='normal'?0:-8;
   if(hat(m,'schmutzfink')&&m.n.s<50)b+=8;
   for(const x of minis)if(x!==m){const k=paar(m,x),v=stand.freund[k]||0,wg=x.heim===m.heim;
     if(stand.liebe[k]===2)b+=wg?20:15;else if(stand.liebe[k]===1)b+=8;
@@ -623,9 +647,10 @@ function feierabend(m,bezahlt){
   zaehle('muenzen',lohn);zaehle('schichten');zaehle('ort_'+j.ort);
   hud();sichern();
 }
-const kannArbeiten=(x,j)=>stand.stufe>=j.stufe&&Math.floor(x.werte[j.wert])>=j.min&&x.n.h>=25&&x.n.e>=25&&(x.n.s>=20||hat(x,'schmutzfink'));
+const kannArbeiten=(x,j)=>stand.stufe>=j.stufe&&Math.floor(x.werte[j.wert])>=j.min&&((x.karriere||{})[j.ort]||0)>=(j.erf||0)&&x.n.h>=25&&x.n.e>=25&&(x.n.s>=20||hat(x,'schmutzfink'));
 function arbeiten(m,j){
-  if(m.grund==='dusche'||m.akt){sag(m.name+' ist gerade beschäftigt.');return}
+  // Ein Plausch darf für die Arbeit unterbrochen werden, alles andere nicht
+  if(m.grund==='dusche'||(m.akt&&m.akt.typ!=='reden')){sag(m.name+' ist gerade beschäftigt.');return}
   wecken(m);
   const o=ORTE[j.ort];
   // Beste Freunde gehen zusammen, wenn der andere frei ist und den Job kann
@@ -634,16 +659,24 @@ function arbeiten(m,j){
   if(partner&&geheZu(partner,o.tile[0],o.tile[1],{typ:'arbeit',j,team:true},true))sag(m.name+' und '+partner.name+' gehen zusammen zur Arbeit '+o.im+'. Teamarbeit bringt mehr Lohn.');
   else sag(m.name+' geht zur Arbeit '+o.im+'.');
 }
+const jobFehlt=(m,j)=>{const w=Math.floor(m.werte[j.wert]),e=(m.karriere||{})[j.ort]||0;
+  return stand.stufe<j.stufe?'Ab Stufe '+j.stufe:w<j.min?wertName(j.wert)+' '+j.min+' nötig (hat '+w+')':e<(j.erf||0)?'Erst nach '+j.erf+' Schichten hier (hat '+e+')':''};
+const schwachText=m=>m.n.h<25?'hat zu viel Hunger':m.n.e<25?'ist zu müde':m.n.s<20&&!hat(m,'schmutzfink')?'ist zu schmutzig':'';
+function jobListe(m,ort){ // Karriereleiter eines Ladens
+  const o=ORTE[ort],schwach=schwachText(m),e=(m.karriere||{})[ort]||0,naechster=[...RANG].reverse().find(r=>r[0]>e);
+  blatt(o.name+' · '+m.name,(schwach?m.name+' '+schwach+' zum Arbeiten. ':'')+'Rang: '+rangVon(m,ort)[1]+' nach '+e+(e===1?' Schicht':' Schichten')+(naechster?', noch '+(naechster[0]-e)+' bis '+naechster[1]:'')+'. Jede Schicht hier zählt für die Leiter.',
+    JOBS.filter(j=>j.ort===ort).map(j=>{const f=jobFehlt(m,j)||(schwach?m.name+' '+schwach:'');
+      return {titel:j.name,text:f||(j.dauer+' Min · '+lohnVon(m,j)+' Münzen · '+wertName(j.wert)),knopf:'Los',fehlt:!!f,fn:()=>arbeiten(m,j)}}));
+}
 $('aArbeit').addEventListener('click',()=>{
-  const m=sel(),N=m.n;
+  const m=sel();
   if(m.klinik){sag(m.name+' liegt im Krankenhaus.');return}
   if(m.job){const j=jobVon(m);
     blatt('Bei der Arbeit',m.name+' arbeitet gerade '+ORTE[j.ort].im+'. Die Schicht läuft auch weiter, wenn du das Spiel schließt.',[{titel:j.name,text:'Noch '+restText(m)+' Minuten · Lohn etwa '+lohnVon(m,j)+' Münzen',knopf:'Abbrechen',fn:()=>feierabend(m,false)}]);return}
-  const schwach=N.h<25?'hat zu viel Hunger':N.e<25?'ist zu müde':N.s<20&&!hat(m,'schmutzfink')?'ist zu schmutzig':'';
-  blatt('Arbeit für '+m.name,schwach?m.name+' '+schwach+' zum Arbeiten.':'Gearbeitet wird in den Läden der Stadt. Gute Laune bringt mehr Lohn, und in freigeschalteten Vierteln gibt es ein Viertel mehr.',JOBS.map(j=>{
-    const w=Math.floor(m.werte[j.wert]);
-    const fehlt=stand.stufe<j.stufe?'Ab Stufe '+j.stufe:w<j.min?wertName(j.wert)+' '+j.min+' nötig (hat '+w+')':schwach?m.name+' '+schwach:'';
-    return {titel:ORTE[j.ort].name+': '+j.name,text:fehlt||(j.dauer+' Min · '+lohnVon(m,j)+' Münzen · '+wertName(j.wert)+' · '+rangVon(m,j.ort)[1]),knopf:'Los',fehlt:!!fehlt,fn:()=>arbeiten(m,j)}}));
+  const schwach=schwachText(m);
+  blatt('Arbeit für '+m.name,(schwach?m.name+' '+schwach+' zum Arbeiten. ':'')+'Drei Läden, 25 Jobs. Wer oft im selben Laden arbeitet, steigt dort auf, schaltet bessere Jobs frei und verdient mehr.',
+    Object.keys(ORTE).map(k=>{const l=JOBS.filter(j=>j.ort===k),geht=l.filter(j=>!jobFehlt(m,j)).length,e=(m.karriere||{})[k]||0;
+      return {titel:ORTE[k].name,text:rangVon(m,k)[1]+' · '+e+(e===1?' Schicht':' Schichten')+' · '+geht+' von '+l.length+' Jobs möglich'+(eigenerLaden(l[0])?' · Lohn\u00a0+25\u00a0%':''),knopf:'Jobs',fn:()=>jobListe(m,k)}}));
 });
 // ---------- Neue Minis ----------
 // Preis richtet sich nach der Summe der Werte
@@ -759,7 +792,7 @@ let fest=null,besuch=null,schnuppe=null,regenbogenBis=0,stromausBis=0,ereignisT=
 const FESTPLATZ=[[12,11],[13,11],[14,11],[12,8],[13,8],[14,8],[11,10],[11,11],[15,11],[15,9]];
 function starteEreignis(name){
   const jetzt=performance.now(),h=stunde(),nacht=himmel(h)[4]>.8,wach=minis.filter(m=>!m.drin&&!m.fort),l=[];
-  if(nacht&&wetter()==='sonne')l.push('schnuppe','schnuppe');
+  if(nacht&&wetter()==='sonne')l.push('schnuppe','schnuppe');else if(nacht&&wetter()==='normal')l.push('schnuppe');
   if(nacht&&jetzt>stromausBis)l.push('strom');
   if(!besuch&&!nacht)l.push('besuch','besuch');
   if(!fest&&h>=17&&h<23.5&&wach.length>=2&&stand.festTag!==heute())l.push('fest','fest','fest');
@@ -816,18 +849,16 @@ $('aKlinik').addEventListener('click',()=>{
 });
 // ---------- Streit und Versöhnung ----------
 function streitZeilen(a,b){
-  const grund=a.n.h<30?'Ich hab Hunger, lass mich in Ruhe!':a.n.e<30?'Ich bin müde, nerv nicht!':['Sag mal, geht es noch?','Hast du mein Essen genommen?','Du hörst mir nie zu!'][zufall(0,2)];
-  return [grund,['Was denn? Du hast angefangen!','Wie redest du mit mir?','Jetzt mach mal halblang.'][zufall(0,2)],'Immer musst du recht haben.','Und du bist immer gleich beleidigt!','Ich rede nicht mehr mit dir.','Schön. Dann eben nicht.'];
+  const z=sprich(nimm(DLG.streit),a,b);
+  if(a.n.h<30)z[0]='Ich habe Hunger, lass mich in Ruhe!';else if(a.n.e<30)z[0]='Ich bin müde, nerv nicht!';
+  return z;
 }
-function versoehnZeilen(a,b){return ['Du … wegen neulich.','Ja?','Es tut mir leid. Ich war blöd.','Mir auch. Wieder gut?','Wieder gut!','Komm, wir gehen ein Stück.']}
-function hassZeilen(a,b){return ['Du schon wieder.','Geh mir aus den Augen.','Ich kann dich nicht ausstehen!','Das beruht auf Gegenseitigkeit!','Verschwinde!','Verschwinde du doch!']}
-function friedenZeilen(a,b){return ['So kann es nicht weitergehen.','Da hast du ausnahmsweise recht.','Waffenstillstand?','… Na gut. Waffenstillstand.','Hand drauf.','Hand drauf.']}
-function flirtZeilen(a,b){return ['Du, '+b.name+' …','Ja?','Ich bin so gern in deiner Nähe.','Ich auch in deiner, '+a.name+'.','Wirklich?','Wirklich.']}
-function antragZeilen(a,b){return ['Ich muss dir etwas sagen.','Ich glaube, ich weiß es schon.','Ich habe mich in dich verliebt.','Ich mich auch in dich.','Wollen wir zusammen sein?','Ja! Ja, ja, ja!']}
-function paarZeilen(a,b){
-  const p=[['Ich habe dich vermisst.','Wir haben uns eben erst gesehen.','Trotzdem.','Ich dich auch.'],['Gehen wir später ein Stück?','Mit dir überallhin.','Am See entlang?','Am See entlang.'],['Du bist das Beste hier.','Nein, du.','Doch, du.','Na gut. Wir beide.'],['Woran denkst du?','An dich. Und ans Abendessen.','In der Reihenfolge?','Meistens.']];
-  return ['Na, mein Herz?','Na du!'].concat(p[zufall(0,p.length-1)],['Bis gleich.','Bis gleich, Liebes.']);
-}
+function versoehnZeilen(a,b){return sprich(nimm(DLG.versoehnung),a,b)}
+function hassZeilen(a,b){return sprich(nimm(DLG.hass),a,b)}
+function friedenZeilen(a,b){return sprich(nimm(DLG.frieden),a,b)}
+function flirtZeilen(a,b){return sprich(nimm(DLG.flirt),a,b)}
+function antragZeilen(a,b){return sprich(nimm(DLG.antrag),a,b)}
+function paarZeilen(a,b){return sprich(nimm(DLG.paarGruss).concat(nimm(DLG.paar),nimm(DLG.paarEnde)),a,b)}
 function zusammenziehen(a,b){ // beste Freunde ziehen zusammen, wenn bei einem von beiden ein Platz frei ist
   if(a.heim===b.heim)return '';
   const platz=id=>{const h=HEIME.find(x=>x.id===id);return stand.frei.includes(h.parz)&&minis.filter(m=>m.heim===id).length<h.plaetze};
@@ -892,28 +923,176 @@ function schrittMini(m,dt,h){
 }
 // Gesprächszeilen: gerade Zeilen spricht a, ungerade b
 const ZEILE=1.8;
-function vorstellung(a,b){
-  return ['Hallo! Ich bin '+a.name+'.','Hi '+a.name+', ich bin '+b.name+'.','Wohnst du auch hier?','Ja, '+heimVon(b).name+'. Und du?',heimVon(a).name+'. Schön, dich zu treffen!','Gleichfalls!'];
+// Platzhalter: {a} spricht zuerst, {b} antwortet, {x}/{y} sind Dritte
+const TUN={int:'knobeln',cha:'quatschen',kra:'Sachen schleppen',kre:'basteln',fle:'aufräumen'};
+const beste=m=>WERTE.map(w=>w[0]).sort((p,q)=>m.werte[q]-m.werte[p])[0];
+const fuelle=(s,a,b,x,y)=>s.replace(/\{a\}/g,a.name).replace(/\{b\}/g,b.name).replace(/\{x\}/g,x?x.name:'').replace(/\{y\}/g,y?y.name:'')
+  .replace(/\{heimA\}/g,heimVon(a).name).replace(/\{heimB\}/g,heimVon(b).name).replace(/\{tunA\}/g,TUN[beste(a)]).replace(/\{tunB\}/g,TUN[beste(b)]);
+const juengst=[];
+function nimm(liste){ // zufällig, aber nichts, was gerade erst dran war
+  const frei=liste.filter(e=>!juengst.includes(e[0])),l=frei.length?frei:liste,e=l[zufall(0,l.length-1)];
+  juengst.push(e[0]);if(juengst.length>40)juengst.shift();return e;
 }
+const DLG={
+ kennen:[
+  ['Hallo! Ich bin {a}.','Hi {a}, ich bin {b}.','Wohnst du auch hier?','Ja, {heimB}. Und du?','{heimA}. Schön, dich zu treffen!','Gleichfalls!'],
+  ['Oh, hallo! Dich kenne ich noch nicht.','Ich bin {b}. Und du?','{a}. Freut mich!','Mich auch. Bist du schon lange hier?','Lange genug, um alle Bäume zu kennen.','Dann zeig mir mal die besten.'],
+  ['Entschuldigung, bist du neu hier?','Kommt drauf an. Ich bin {b}.','{a}. Mein Zuhause: {heimA}.','Meins: {heimB}. Fast Nachbarn!','Dann sieht man sich öfter.','Unbedingt.'],
+  ['Hey! Ich bin {a}.','{b}. Schön, mal jemanden zu treffen.','Was machst du so am liebsten?','Am liebsten {tunB}. Und du?','Ich bin mehr für {tunA}.','Dann ergänzen wir uns ja.'],
+  ['Ich glaube, wir kennen uns noch nicht.','Stimmt. {b}, angenehm.','{a}. Schön hier, oder?','Ich mag es sehr.','Ich auch. Also dann, {b}!','Bis bald, {a}!'],
+  ['Du bist doch {b}, oder?','Woher weißt du das?','Hier spricht sich alles herum. Ich bin {a}.','Na dann: Hallo, {a}!','Wollen wir mal was zusammen machen?','Gern. Sag einfach Bescheid.'],
+  ['Warte mal! Wir haben uns noch nie unterhalten.','Stimmt eigentlich. Ich bin {b}.','{a}. Ich hab dich schon öfter gesehen.','Und nie Hallo gesagt?','Ich bin manchmal schüchtern.','Jetzt nicht mehr. Hallo, {a}!']],
+ gruss:[['Hallo {b}!','Hey {a}!'],['Na, {b}?','Na?'],['{b}! Gut, dass ich dich treffe.','Was gibt es?'],['Moin {b}.','Moin moin.'],['Hey, wie geht es?','Muss. Und selbst?'],['Ach, {b}!','Ach, {a}!'],['Da bist du ja.','Hast du mich gesucht?'],['Huhu, {b}!','Huhu!']],
+ ende:[['Mach’s gut!','Tschüss!'],['Bis später!','Bis dann!'],['Ich muss weiter.','Man sieht sich.'],['War schön mit dir.','Fand ich auch.'],['Also dann.','Also dann!'],['Pass auf dich auf.','Du auch.'],['Bis bald, {b}.','Bis bald, {a}.'],['Wir sehen uns.','Bestimmt.']],
+ thema:[
+  ['Schöner Tag heute, oder?','Find ich auch!'],['Wie läuft es bei dir?','Ganz gut, danke!'],['Was machst du später?','Mal sehen. Vielleicht arbeiten.'],
+  ['Hast du gut geschlafen?','Wie ein Stein.'],['Neue Frisur?','Nein, nur Wind.'],['Was gab es bei dir zu essen?','Apfel. Wie immer.'],
+  ['Ich habe heute von dir geträumt.','Hoffentlich was Nettes?','Du hast mir einen Apfel geklaut.','Klingt nach mir.'],
+  ['Kennst du einen guten Witz?','Sagt ein Pilz zum anderen: Na, du Champignon?','…','Ich fand ihn gut.'],
+  ['Glaubst du, hinter dem Glas ist noch was?','Bestimmt. Irgendwer füttert uns ja.'],['Manchmal fühle ich mich beobachtet.','Ich auch! Von oben.'],
+  ['Was ist dein Lieblingsessen?','Spiegelei. Eindeutig.'],['Ich habe einen Ohrwurm.','Sing mal vor!','La la laa …','Jetzt habe ich ihn auch.'],
+  ['Hast du die Möwe gesehen?','Die guckt immer so streng.'],['Wie viele Blumen hier wohl wachsen?','Ich habe bei hundert aufgehört.'],
+  ['Was würdest du mit tausend Münzen machen?','Ein Jahr lang Apfelkörbe.'],['Ich räume heute mal auf.','Das sagst du jeden Tag.'],
+  ['Kannst du pfeifen?','Nur auf dem letzten Loch.'],['Was denkst du gerade?','Nichts. Herrlich.'],['Ich habe einen Stein gefunden. Schau!','Ein sehr schöner Stein.'],
+  ['Glaubst du an Sternschnuppen?','Ich wünsche mir immer dasselbe.','Was denn?','Verrate ich nicht.'],
+  ['Ich lerne gerade Jonglieren.','Womit?','Mit Äpfeln. Es werden weniger.','Verstehe.'],['Hast du Angst im Dunkeln?','Nur wenn die Laternen ausgehen.'],
+  ['Welche Jahreszeit magst du am liebsten?','Die, in der es Essen gibt.'],['Mir ist langweilig.','Zähl doch die Tauben.'],
+  ['Hörst du das?','Was?','Nichts. Schön, oder?','Sehr.'],['Ich glaube, mein Schuh ist offen.','Du hast gar keine Schnürsenkel.'],
+  ['Was ist eigentlich dein Traumjob?','Irgendwas mit Leitung.'],['Der Postbote war lange nicht da.','Vielleicht kommt er heute.'],
+  ['Ich war neulich am Brunnen.','Hast du eine Münze reingeworfen?','Zwei. Sicher ist sicher.','Verschwendung!'],
+  ['Du siehst heute gut aus.','Danke! Frisch gewaschen.'],['Hast du mal Feuer?','Das Lagerfeuer ist da drüben.'],
+  ['Ich überlege, früher aufzustehen.','Und?','Ich überlege noch.','Gute Entscheidung.'],['Weißt du, wie spät es ist?','Zeit für einen Snack.'],
+  ['Wem gehört eigentlich das rote Auto?','Es steht da, seit ich denken kann.'],['Ich sammle jetzt Blätter.','Wozu?','Zum Sammeln.','Klingt logisch.'],
+  ['Kannst du ein Geheimnis behalten?','Nein.','Dann sage ich es dir nicht.','Vernünftig.'],['Ich habe heute schon zehn Schritte gemacht.','Angeber.'],
+  ['Glaubst du, die Tauben verstehen uns?','Die eine nickt immer.'],['Wenn ich groß bin, werde ich Chef.','Du bist schon groß.','Dann wird es Zeit.','Viel Erfolg.'],
+  ['Ich habe mein Spiegelbild im Teich gesehen.','Und?','Sah gut aus.','Der Teich lügt nie.'],['Was war das für ein Geräusch?','Mein Magen. Entschuldigung.'],
+  ['Hast du schon mal im Zelt geschlafen?','Es raschelt die ganze Nacht.'],['Ich könnte ewig hier stehen.','Wir stehen schon ziemlich lange.'],
+  ['Meinst du, wir sind die Einzigen hier?','Und die Möwe.','Stimmt. Und die Möwe.','Die zählt doppelt.'],
+  ['Ich habe eine Idee!','Erzähl.','Habe sie vergessen.','War bestimmt gut.'],['Wie findest du meinen Hut?','Du trägst ihn jeden Tag.','Und?','Er steht dir jeden Tag.'],
+  ['Wollen wir um die Wette laufen?','Bis wohin?','Bis ich keine Lust mehr habe.','Also bis hier.'],['Ich mag, wie es hier riecht.','Nach Gras und Lagerfeuer.']],
+ freund:[
+  ['Mit dir rede ich am liebsten.','Ach, hör auf!'],['Du bist mein Lieblingsnachbar.','Du meiner auch.'],
+  ['Weißt du noch, wie wir uns kennengelernt haben?','Du warst so schüchtern!','War ich gar nicht.','Doch. Das war nett.'],
+  ['Wenn was ist, sag Bescheid.','Du auch. Immer.'],['Wir sollten mal zusammen arbeiten gehen.','Abgemacht!'],['Ohne dich wäre es hier langweilig.','Ohne dich auch.'],
+  ['Du kennst mich besser als alle anderen.','Deshalb mag ich dich ja trotzdem.'],['Ich habe dir einen Apfel aufgehoben.','Du bist ein Schatz.'],
+  ['Wenn ich mal umkippe, holst du mich ab?','Sofort. Mit Blumen.'],['Dir kann ich alles erzählen.','Dann fang an. Ich habe Zeit.'],
+  ['Weißt du, was ich an dir mag?','Sag.','Dass du immer zuhörst.','Was hast du gesagt? … Spaß!']],
+ streit:[
+  ['Sag mal, geht es noch?','Was denn? Du hast angefangen!','Immer musst du recht haben.','Und du bist immer gleich beleidigt!','Ich rede nicht mehr mit dir.','Schön. Dann eben nicht.'],
+  ['Du hast mich vorhin nicht gegrüßt.','Ich habe dich gar nicht gesehen!','Ja klar.','Wirklich nicht!','Spar dir das.','Dann eben nicht.'],
+  ['Warst du an meinem Essen?','Wie bitte?','Da fehlt ein Apfel.','Zähl halt richtig!','Unverschämt.','Selber.'],
+  ['Musst du immer so laut sein?','Ich bin nicht laut!','DOCH.','Jetzt schreist du.','Weil du mich aufregst!','Na toll.'],
+  ['Du hast gesagt, du kommst mit.','Habe ich vergessen.','Du vergisst immer alles.','Und du bist nachtragend.','Bin ich nicht! … Doch.','Siehst du.'],
+  ['Das war mein Platz am Feuer.','Da stand kein Name dran.','Das weiß doch jeder.','Ich nicht.','Jetzt weißt du es.','Mir egal.'],
+  ['Du redest hinter meinem Rücken.','Wer sagt das?','Alle.','Dann frag doch alle.','Mache ich auch.','Viel Spaß.'],
+  ['Hörst du mir überhaupt zu?','Was?','Genau das meine ich!','Jetzt übertreib nicht.','Ich übertreibe nie!','Du übertreibst gerade.'],
+  ['Du hast meinen Stein weggeworfen.','Das war ein ganz normaler Stein!','Es war MEIN Stein.','Hier liegen tausend.','Aber nicht meiner.','Ach, komm.']],
+ versoehnung:[
+  ['Du … wegen neulich.','Ja?','Es tut mir leid. Ich war blöd.','Mir auch. Wieder gut?','Wieder gut!','Komm, wir gehen ein Stück.'],
+  ['Hey. Hast du kurz?','Kommt drauf an.','Ich wollte mich entschuldigen.','… Ich mich auch.','Also wieder Freunde?','Wieder Freunde.'],
+  ['Ich habe dir einen Apfel mitgebracht.','Als Bestechung?','Als Entschuldigung.','Na gut. Angenommen.','Teilen wir ihn?','Halb und halb.'],
+  ['Das neulich war dumm von mir.','Von mir auch.','Vergessen wir es?','Was denn vergessen?','Genau.','Genau.'],
+  ['Ich mag es nicht, wenn wir streiten.','Ich auch nicht.','Dann lassen wir es doch.','Guter Plan.','Hand drauf?','Hand drauf.'],
+  ['Ich habe die ganze Zeit darüber nachgedacht.','Ich auch.','Du hattest ein bisschen recht.','Du auch. Ein bisschen.','Reicht das für Frieden?','Locker.']],
+ hass:[
+  ['Du schon wieder.','Geh mir aus den Augen.','Ich kann dich nicht ausstehen!','Das beruht auf Gegenseitigkeit!','Verschwinde!','Verschwinde du doch!'],
+  ['Oh nein. Du.','Die Freude ist ganz meinerseits.','Geh einfach weiter.','Geh du doch weiter!','Ich war zuerst hier.','Mir doch egal.'],
+  ['Was guckst du so?','Ich gucke, wie ich will.','Dann guck woandershin.','Zwing mich doch.','Fordere es nicht heraus.','Ich zittere schon.'],
+  ['Du bist das Letzte.','Und du kommst gleich danach.','Lass mich in Ruhe.','Mit dem größten Vergnügen.','Schön.','Schön!'],
+  ['Mit dir rede ich nicht.','Du redest doch gerade.','Das zählt nicht.','Alles zählt.','Ach, sei still.','Sei du still!'],
+  ['Hier stinkt es plötzlich.','Dann wasch dich mal.','Sehr witzig.','Ich lache innerlich.','Du hast gar kein Inneres.','Und du kein Benehmen.']],
+ frieden:[
+  ['So kann es nicht weitergehen.','Da hast du ausnahmsweise recht.','Waffenstillstand?','… Na gut. Waffenstillstand.','Hand drauf.','Hand drauf.'],
+  ['Ehrlich gesagt bin ich es leid.','Das Streiten?','Ja. Es macht müde.','Mich auch.','Versuchen wir es mit Ignorieren?','Klingt gut. Für den Anfang.'],
+  ['Du. Ich habe nachgedacht.','Das wäre neu.','Siehst du, genau das meine ich.','… Tut mir leid. Reflex.','Frieden?','Frieden. Erst mal.'],
+  ['Wir müssen keine Freunde sein.','Nein.','Aber Feinde sein ist anstrengend.','Stimmt leider.','Also Ruhe?','Ruhe.']],
+ flirt:[
+  ['Du, {b} …','Ja?','Ich bin so gern in deiner Nähe.','Ich auch in deiner, {a}.','Wirklich?','Wirklich.'],
+  ['Du lachst so schön.','Sag das noch mal.','Du lachst so schön.','Jetzt werde ich rot.','Steht dir.','Hör auf … nein, hör nicht auf.'],
+  ['Ich habe dir Blumen gepflückt.','Für mich?','Für wen sonst?','Die sind wunderschön.','So wie du.','Oh.'],
+  ['Wenn du da bist, ist alles leichter.','Das wollte ich dir auch sagen.','Wirklich?','Schon lange.','Warum hast du nichts gesagt?','Ich habe mich nicht getraut.'],
+  ['Darf ich dir etwas verraten?','Immer.','Ich warte jeden Tag darauf, dich zu sehen.','Ich komme extra hier vorbei.','Du auch?','Ich auch.'],
+  ['Du hast da was im Gesicht.','Was denn?','Ein Lächeln.','Das ist von dir.','Dann behalte es.','Gern.']],
+ antrag:[
+  ['Ich muss dir etwas sagen.','Ich glaube, ich weiß es schon.','Ich habe mich in dich verliebt.','Ich mich auch in dich.','Wollen wir zusammen sein?','Ja! Ja, ja, ja!'],
+  ['Ich kann nicht mehr so tun, als wäre nichts.','Was meinst du?','Ich mag dich. Mehr als mögen.','Ich dachte, du merkst es nie.','Also du auch?','Schon so lange.'],
+  ['Bleib mal stehen.','Was ist?','Ich will mit dir zusammen sein.','Sag das noch mal.','Ich will mit dir zusammen sein.','Ja. Unbedingt ja.'],
+  ['Weißt du, was mein Lieblingsplatz ist?','Der See?','Neben dir.','… Meiner auch. Neben dir.','Dann bleiben wir da?','Für immer.']],
+ paarGruss:[['Na, mein Herz?','Na du!'],['Da bist du ja.','Hast du mich gesucht?'],['Hallo, Lieblingsmensch.','Hallo, Lieblingsmensch.'],['Ich habe dich schon von Weitem gesehen.','Und ich dich gehört.']],
+ paar:[
+  ['Ich habe dich vermisst.','Wir haben uns eben erst gesehen.','Trotzdem.','Ich dich auch.'],['Gehen wir später ein Stück?','Mit dir überallhin.','Am See entlang?','Am See entlang.'],
+  ['Du bist das Beste hier.','Nein, du.','Doch, du.','Na gut. Wir beide.'],['Woran denkst du?','An dich. Und ans Abendessen.','In der Reihenfolge?','Meistens.'],
+  ['Hast du gegessen?','Ja. Du?','Ich habe dir was aufgehoben.','Du denkst immer an mich.'],['Wollen wir heute ans Feuer?','Nur wir zwei?','Nur wir zwei.','Abgemacht.'],
+  ['Du schnarchst übrigens.','Tu ich nicht!','Doch. Ich mag es.','Dann schnarche ich weiter.'],['Was wünschst du dir?','Dass alles so bleibt.','Mit mir?','Mit dir.'],
+  ['Ich habe von uns geträumt.','Was haben wir gemacht?','Nichts Besonderes. Es war schön.','So wie jetzt.'],['Bleibst du noch ein bisschen?','Solange du willst.','Dann sehr lange.','Gut.'],
+  ['Du hast da was im Haar.','Wo?','Jetzt nicht mehr.','Das war nur ein Vorwand, oder?'],['Ich bin so froh, dass es dich gibt.','Sag das nicht, sonst weine ich.','Dann sage ich es leise.','Ich habe es trotzdem gehört.'],
+  ['Wie war dein Tag?','Besser, seit du da bist.','Schleimer.','Aber deiner.']],
+ paarEnde:[['Bis gleich.','Bis gleich, Liebes.'],['Vergiss mich nicht.','Wie denn?'],['Kuss!','Kuss zurück!'],['Bis heute Abend.','Ich zähle die Minuten.']]
+};
+const sprich=(z,a,b,x,y)=>z.map(s=>fuelle(s,a,b,x,y));
+function vorstellung(a,b){return sprich(nimm(DLG.kennen),a,b)}
 function plauderei(a,b,freund){
-  const h=stunde(),paare=[['Schöner Tag heute, oder?','Find ich auch!'],['Wie läuft es bei dir?','Ganz gut, danke!'],['Was machst du später?','Mal sehen. Vielleicht arbeiten.']];
-  if(a.n.h<45)paare.push(['Ich hab so einen Hunger.','Hoffentlich legt bald jemand was hin.']);
-  if(a.n.e<40)paare.push(['Ich bin total müde.','Dann ab ins Bett mit dir!']);
-  if(a.n.s<40)paare.push(['Ich müsste mal duschen.','Ich wollte nichts sagen …']);
-  if(h>=21||h<6)paare.push(['Ganz schön spät, oder?','Ich geh auch bald schlafen.']);
-  if(stand.frei.includes('B'))paare.push(['Warst du heute schon am See?','Noch nicht. Kommst du mit?']);
-  if(stand.frei.includes('F'))paare.push(['Der Pilz-Kiosk ist super.','Da arbeite ich manchmal!']);
-  const wt=wetter();
-  if(wt==='regen')paare.push(['Was für ein Regen!','Ich mag das Geräusch.']);
-  if(wt==='schnee')paare.push(['Es schneit!','Schneeballschlacht später?']);
-  if(wt==='nebel')paare.push(['Man sieht ja kaum etwas.','Bleib lieber auf dem Weg.']);
-  if(wt==='sonne'&&jahreszeit()===1)paare.push(['Herrlich, die Sonne!','Ab an den See!']);
-  if(jahreszeit()===2)paare.push(['Überall liegt Laub.','Herbst ist meine liebste Zeit.']);
-  const beste=WERTE.map(w=>w[0]).sort((x,y)=>b.werte[y]-b.werte[x])[0];
-  paare.push(['Worin bist du richtig gut?',wertName(beste)+', glaub ich.']);
-  if(freund)paare.push(['Mit dir rede ich am liebsten.','Ach, hör auf!'],['Du bist mein Lieblingsnachbar.','Du meiner auch.']);
-  const erstes=paare.splice(zufall(0,paare.length-1),1)[0],zweites=paare[zufall(0,paare.length-1)];
-  return ['Hallo '+b.name+'!','Hey '+a.name+'!'].concat(erstes,zweites,[freund?'Bis später!':'Mach’s gut!','Tschüss!']);
+  const h=stunde(),wt=wetter(),jz=jahreszeit(),T2=[];let dritte=null;
+  // Themen, die zur Lage passen, kommen mehrfach in den Topf
+  const oft=(n,...l)=>{for(const e of l)for(let i=0;i<n;i++)T2.push(e)};
+  if(a.n.h<45)oft(3,['Ich habe so einen Hunger.','Hoffentlich legt bald jemand was hin.'],['Hast du was zu essen dabei?','Nur gute Ratschläge.']);
+  if(a.n.e<40)oft(3,['Ich bin total müde.','Dann ab ins Bett mit dir!'],['Ich schlafe gleich im Stehen ein.','Lehn dich an den Baum da.']);
+  if(a.n.s<40)oft(3,['Ich müsste mal duschen.','Ich wollte nichts sagen …'],['Rieche ich komisch?','Komisch ist nett gesagt.']);
+  if(a.n.l<35)oft(3,['Mir geht es heute nicht so gut.','Was ist los?','Weiß ich selbst nicht.','Dann bleibe ich einfach kurz hier.']);
+  if(a.n.l>85)oft(2,['Ich könnte die ganze Welt umarmen!','Fang ruhig mit mir an.']);
+  if(h>=21||h<6)oft(2,['Ganz schön spät, oder?','Ich gehe auch bald schlafen.'],['Schau mal, die Sterne.','So viele. Ich komme immer durcheinander.']);
+  if(h>=5&&h<9)oft(2,['So früh schon unterwegs?','Der frühe Vogel und so.'],['Guten Morgen!','Ist er das? Ich prüfe noch.']);
+  if(wt==='regen')oft(3,['Was für ein Regen!','Ich mag das Geräusch.'],['Meine Socken sind nass.','Meine auch. Schön ist anders.']);
+  if(wt==='schnee')oft(3,['Es schneit!','Schneeballschlacht später?'],['Mir ist so kalt.','Hüpfen hilft. Oder Lagerfeuer.']);
+  if(wt==='nebel')oft(3,['Man sieht ja kaum etwas.','Bleib lieber auf dem Weg.'],['Bist du das, {b}?','Wer sonst? Die Möwe?']);
+  if(wt==='normal')oft(1,['Angenehm heute, oder?','Ja. Nicht zu warm, nicht zu kalt.'],['Ganz normales Wetter heute.','Genau so mag ich es.']);
+  if(wt==='sonne'&&jz===1)oft(2,['Herrlich, die Sonne!','Ab an den See!']);
+  if(jz===2)oft(2,['Überall liegt Laub.','Herbst ist meine liebste Zeit.'],['Die Bäume sind so bunt.','Wie angemalt.']);
+  if(jz===3)oft(2,['Alles weiß!','Und so still.'],['Der Teich ist zugefroren.','Die armen Fische. Oder schlafen die?']);
+  if(jz===0)oft(1,['Riechst du das? Frühling.','Und Blumen. Hatschi.']);
+  if(stand.frei.includes('B'))oft(1,['Warst du heute schon am See?','Noch nicht. Kommst du mit?'],['Im Boot war ich noch nie.','Es wackelt. Sehr.']);
+  if(stand.frei.includes('F'))oft(1,['Der Pilz-Kiosk ist super.','Da arbeite ich manchmal!']);
+  if(stand.frei.includes('E'))oft(1,['Die Stadthäuser sind schick.','Aber die Treppen!']);
+  if(performance.now()<stromausBis)oft(5,['Warum ist es in der Stadt so dunkel?','Stromausfall. Unheimlich, oder?']);
+  if(fest)oft(5,['Was für ein Fest!','Das sollten wir öfter machen.'],['Kennst du ein Lied?','Nur eins. Und das falsch.']);
+  if(besuch)oft(4,['Der Postbote ist da!','Hoffentlich ein Päckchen für uns.']);
+  // Arbeit und Karriere
+  for(const o in ORTE){const r=rangVon(b,o);if(r[0]>=3)oft(2,['Wie läuft es '+ORTE[o].im+'?','Ich bin jetzt '+r[1]+'!','Glückwunsch!','Danke. Das Abzeichen steht mir, oder?'])}
+  oft(1,['Worin bist du richtig gut?',wertName(beste(b))+', glaube ich.'],['Gehst du heute noch arbeiten?','Mal sehen, was die Füße sagen.'],['Ich will Karriere machen.','Fang mit Regale einräumen an.']);
+  // Eigenarten
+  if(hat(a,'morgenmuffel')&&h<11)oft(3,['Sprich mich bitte nicht an.','Auch dir einen guten Morgen.']);
+  if(hat(a,'schleckermaul'))oft(2,['Hast du was zu essen?','Du hast doch eben erst gegessen.','Das war vor zehn Minuten!','Stimmt. Eine Ewigkeit.']);
+  if(hat(a,'faulpelz'))oft(2,['Ich mache heute blau.','Du machst jeden Tag blau.']);
+  if(hat(a,'arbeitstier'))oft(2,['Ich könnte noch eine Schicht machen.','Du warst doch gerade erst arbeiten.']);
+  if(hat(a,'schmutzfink'))oft(2,['Duschen ist was für Anfänger.','Das riecht man.']);
+  if(hat(a,'nachteule'))oft(2,['Nachts ist es hier am schönsten.','Da schlafe ich. Angeblich.']);
+  if(hat(a,'regenfan'))oft(2,['Hoffentlich regnet es bald wieder.','Du bist seltsam. Aber nett.']);
+  if(hat(a,'sonnenkind'))oft(2,['Ohne Sonne bin ich nur halb.','Dann warst du heute '+(wt==='sonne'?'ganz':wt==='normal'?'fast ganz':'halb')+' nett.']);
+  if(hat(a,'gesellig'))oft(2,['Wollen wir alle zusammen was machen?','Mit dir immer.']);
+  if(hat(a,'einzelgaenger'))oft(2,['Ich brauche gleich wieder meine Ruhe.','Kein Problem. Bis später.']);
+  // Klatsch über Dritte
+  const rest=minis.filter(x=>x!==a&&x!==b);
+  for(const x of rest){
+    if(x.klinik)oft(4,['{x} liegt im Krankenhaus.','Oh nein. Wir sollten was mitbringen.']);
+    if(x.n.s<30&&!x.klinik)oft(2,['Riechst du das auch?','Das ist {x}. Sag nichts.']);
+    if(x.fort&&x.job)oft(1,['{x} arbeitet schon wieder.','Irgendwer muss ja die Äpfel verdienen.']);
+    for(const y of rest)if(y.id>x.id){const k=paar(x,y);
+      if(stand.liebe[k]===2)oft(3,['{x} und {y} sind so ein schönes Paar.','Fast kitschig. Ich mag es.']);
+      else if(stand.liebe[k]===1)oft(3,['Zwischen {x} und {y} läuft was.','Meinst du? Ich habe nichts gemerkt.','Du merkst nie was.','Stimmt.']);
+      else if((stand.freund[k]||0)<=-45)oft(3,['{x} und {y} haben sich wieder gezofft.','Die zwei. Immer dasselbe.']);
+    }
+    if(!dritte&&T2.some(e=>e[0].includes('{x}')))dritte=x;
+  }
+  // Auswahl: Begrüßung, zwei bis drei Themen, Abschied
+  const topf=DLG.thema.concat(T2,freund?DLG.freund.concat(DLG.freund):[]),themen=[],zahl=freund&&Math.random()<.4?3:2;
+  for(let i=0;themen.length<zahl&&i<20;i++){const e=nimm(topf);if(!themen.includes(e))themen.push(e)}
+  const alle=[nimm(DLG.gruss)].concat(themen,[nimm(DLG.ende)]).flat();
+  // Dritte je Zeile passend einsetzen
+  return alle.map(s=>{if(!s.includes('{x}'))return fuelle(s,a,b);
+    for(const x of rest){if(s.includes('{y}')){for(const y of rest)if(y.id>x.id){const k=paar(x,y),v=stand.freund[k]||0;
+          if((s.includes('Paar')&&stand.liebe[k]===2)||(s.includes('läuft was')&&stand.liebe[k]===1)||(s.includes('gezofft')&&v<=-45))return fuelle(s,a,b,x,y)}}
+      else if((s.includes('Krankenhaus')&&x.klinik)||(s.includes('Riechst')||s.includes('Das ist {x}'))&&x.n.s<30||(s.includes('arbeitet')&&x.fort))return fuelle(s,a,b,x)}
+    return fuelle(s,a,b,rest[0],rest[1])});
 }
 // ---------- Gedanken ----------
 // Sammelt alles, was dem Mini gerade durch den Kopf gehen könnte; g = Gewicht (Dringendes öfter)
@@ -937,6 +1116,7 @@ function gedankeFuer(m){
   if(N.e<30)add(4,'Gähn …','Meine Beine sind so schwer.','Nur fünf Minuten die Augen zumachen.','Mein Bett ruft nach mir.','Ich schlafe gleich im Stehen ein.');
   else if(N.e>85)add(1,'Ich könnte Bäume ausreißen.','Voller Energie!','Wohin mit all der Kraft?');
   // Wetter und Jahreszeit
+  if(wt==='normal')add(1,'Angenehmes Wetter heute.','Nicht zu warm, nicht zu kalt.','Genau richtig für einen Spaziergang.','Heute ist ein ganz normaler Tag. Schön.');
   if(wt==='sonne')add(2,'Die Sonne tut gut.','Wo ist meine Sonnenbrille?','Kein Wölkchen am Himmel.','So könnte es immer sein.',stand.frei.includes('B')?'Perfektes Wetter für den See.':'Bei dem Wetter müsste man am See sein.');
   if(wt==='regen')add(3,'Meine Schuhe sind schon ganz nass.','Regen, Regen, Regen …','Ich hätte einen Schirm mitnehmen sollen.','Wenigstens muss keiner die Blumen gießen.','Ich mag, wie der Regen riecht.','Pfützen! Soll ich reinspringen?');
   if(wt==='nebel')add(3,'Ich sehe kaum die Hand vor Augen.','Unheimlich, dieser Nebel.','Wo war noch mal der Weg?','Im Nebel klingt alles so leise.','Hallo? Ist da wer?');
@@ -954,7 +1134,7 @@ function gedankeFuer(m){
   if(hat(m,'morgenmuffel')&&h<11)add(4,'Vor zehn sollte mich niemand ansprechen.','Wer hat eigentlich den Morgen erfunden?','Erst Kaffee, dann die Welt.');
   if(hat(m,'nachteule'))add(2,(h>=20||h<5)?'Nachts kann ich am besten denken.':'Der Tag ist mir viel zu hell.','Schlafen kann ich, wenn ich alt bin.');
   if(hat(m,'regenfan'))add(3,wt==='regen'?'Endlich Regen! Herrlich.':wt==='nebel'?'Nebel ist so schön geheimnisvoll.':'Ein bisschen Regen wäre jetzt schön.');
-  if(hat(m,'sonnenkind'))add(3,wt==='sonne'?'Sonne! Genau mein Wetter.':'Wann kommt endlich die Sonne wieder?');
+  if(hat(m,'sonnenkind'))add(3,wt==='sonne'?'Sonne! Genau mein Wetter.':wt==='normal'?'Ein bisschen mehr Sonne wäre schön.':'Wann kommt endlich die Sonne wieder?');
   if(hat(m,'schleckermaul'))add(2,'Ich denke schon wieder ans Essen.','Ein Apfelkorb nur für mich …','Nach dem Essen ist vor dem Essen.');
   if(hat(m,'gesellig'))add(2,'Mit wem könnte ich jetzt reden?','Allein sein ist nichts für mich.','Je mehr Leute, desto besser.');
   if(hat(m,'einzelgaenger'))add(2,'Ein bisschen Ruhe tut gut.','So viele Leute hier …','Am liebsten bin ich für mich.');
@@ -1016,6 +1196,10 @@ function gedankeFuer(m){
   // Das Terrarium
   add(1,'Manchmal fühle ich mich beobachtet.','Wer legt hier eigentlich immer das Essen hin?','Was ist wohl hinter der Scheibe?','Ob da draußen jemand zuschaut?','Der Himmel hat heute so einen Glanz.','Hallo, großes Gesicht da oben!');
   // Dies und das
+  add(1,'Ob ich es bis zur Leitung schaffe?','Kaffee kochen kann ja wohl jeder. Oder?','Im Büro summt immer irgendwas.','Farben mischen macht mehr Spaß als gedacht.','Einkaufswagen haben ein Eigenleben.','Wer Pilze putzt, denkt viel nach.',
+    'Ich sollte öfter Danke sagen.','War das eben ein Fisch?','Morgen fange ich was Neues an.','Ich mag den Geruch von frischem Brot. Gibt es hier Brot?','Irgendwo bellt ein Hund. Wir haben gar keinen Hund.','Wenn ich pfeife, guckt die Möwe.',
+    'Ich war noch nie hinter dem Baumarkt.','Wie tief ist eigentlich der Teich?','Ob Tauben Freunde haben?','Heute fühlt sich an wie ein Dienstag.','Ich habe Lust auf ein Abenteuer. Ein kleines.','Wo habe ich nur meinen Glücksstein?',
+    'Manchmal rede ich mit den Blumen.','Die Laterne flackert so freundlich.','Ich könnte ein Gedicht schreiben. Über Äpfel.','Ein Nickerchen ist nie verkehrt.','Was reimt sich auf Pilz?','Eines Tages fahre ich mit dem Boot hinaus.');
   add(1,'Ich habe einen Ohrwurm.','Wie viele Blumen hier wohl wachsen?','Hab ich den Herd ausgemacht?','Ich sollte mal wieder ein Buch lesen.','Wolken zählen: eins, zwei …','Was wollte ich gerade machen?','Ob Pilze wohl Gefühle haben?','Ich glaube, mein Schuh ist offen.','Heute Abend wird früh geschlafen. Bestimmt.','Ich müsste mal aufräumen.','Wie spät ist es eigentlich?','Schöner Stein. Den nehme ich mit.');
   let s;for(let i=0;i<6;i++){s=L[zufall(0,L.length-1)];if(s!==m.letzter)break}
   return s;
