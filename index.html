@@ -122,7 +122,7 @@ button{font:inherit;color:inherit;cursor:pointer}
   </div>
 </div>
 <button id="aTag" class="tafel chip"><small>Tag</small><span id="tagStand">0/3</span><small id="serie"></small></button>
-<div id="hinweis" class="tafel chip">Tippe auf den Boden, dann läuft Mika dorthin. Wische, um dich umzusehen, und zoome mit zwei Fingern. Tippe einen Mini an, um ihn auszuwählen.</div>
+<div id="hinweis" class="tafel chip">Tippe auf den Boden, dann läuft dein Mini dorthin. Wische, um dich umzusehen, und zoome mit zwei Fingern. Tippe einen Mini an, um ihn auszuwählen.</div>
 <div id="aktionen">
   <button class="knopf" id="aFutter">Essen</button>
   <button class="knopf" id="aWasch">Waschen</button>
@@ -201,14 +201,19 @@ const JOBS=[
 ];
 const jobVon=m=>JOBS.find(j=>j.id===m.job.id);
 
-const NAMEN=['Lotte','Finn','Greta','Oskar','Ida','Paul','Frieda','Emil','Mila','Anton','Juna','Karl','Nele','Theo','Romy','Bruno'];
+const NAMEN=['Lotte','Finn','Greta','Oskar','Ida','Paul','Frieda','Emil','Mila','Anton','Juna','Karl','Nele','Theo','Romy','Bruno','Mika','Jule','Hannes','Elif','Tom','Smilla','Jonte','Pia','Kasimir','Leni','Ole','Fenja','Henri','Malia','Lasse','Tilda','Yusuf','Clara','Piet','Nova','Bela','Merle','Fiete','Alma','Ruben','Kaja','Milo','Edda','Jasper','Lia','Arvid','Hedi','Tamo','Ronja','Levi','Wilma','Nuri','Stine','Kalle','Zoe','Jarne','Elsa','Momo','Frida','Benno','Liv','Tarik','Jette','Lupo','Enna','Sami','Thea','Kuno','Mira','Okke','Rosa'];
+// Werte würfeln: je 2 bis 10, mittlere Werte sind am häufigsten
+function wuerfleWerte(){const w={};for(const [k] of WERTE)w[k]=zufall(1,4)+zufall(1,4)+(Math.random()<.35?zufall(1,2):0);return w}
+const kannEinsteigen=w=>w.fle>=3||w.cha>=5||w.int>=4; // mindestens ein Job der ersten Stufe muss gehen
+function ersterMini(){let w;do{w=wuerfleWerte()}while(!kannEinsteigen(w));
+  return {id:1,name:NAMEN[zufall(0,NAMEN.length-1)],skin:zufall(0,D.chars.length-1),tx:8,ty:9,n:{h:70,s:80,e:75,l:70},werte:w,job:null,drin:false,heim:'haus',zufallArt:true}}
 const wertName=k=>WERTE.find(w=>w[0]===k)[2];
 
 // ---------- Spielstand ----------
 let stand={geld:200,stufe:1,xp:0,frei:['A'],futter:[],zeit:0,minis:null,wahl:1,nr:1,angebot:null,freund:{},streit:{},tag:null,serie:{tage:0,letzter:'',best:0},festTag:''};
 try{const s=JSON.parse(localStorage.getItem('miniTerrarium1'));if(s&&s.frei)stand=Object.assign(stand,s)}catch(e){}
 if(!stand.minis){ // erster Start oder alter Spielstand mit nur einem Mini
-  stand.minis=[{id:1,name:'Mika',skin:0,tx:stand.mx||8,ty:stand.my||9,n:stand.n||{h:70,s:80,e:75,l:70},werte:stand.werte||{int:4,cha:6,kra:3,kre:5,fle:5},job:stand.job||null,drin:!!stand.drin,heim:'haus'}];
+  stand.minis=stand.werte?[{id:1,name:'Mika',skin:0,tx:stand.mx||8,ty:stand.my||9,n:stand.n||{h:70,s:80,e:75,l:70},werte:stand.werte,job:stand.job||null,drin:!!stand.drin,heim:'haus'}]:[ersterMini()];
   for(const k of ['mx','my','n','werte','job','drin'])delete stand[k];
 }
 const parzVon=(tx,ty)=>PARZ.find(p=>p.px===Math.floor(tx/PW)&&p.py===Math.floor(ty/PH));
@@ -226,7 +231,9 @@ for(const m of minis){
   m.x=m.tx*T;m.y=m.ty*T;
 }
 const sel=()=>minis.find(m=>m.id===stand.wahl)||minis[0];
+let nichtSichern=false;
 function sichern(){
+  if(nichtSichern)return;
   stand.minis=minis.map(m=>({id:m.id,name:m.name,skin:m.skin,tx:m.tx,ty:m.ty,n:m.n,werte:m.werte,job:m.job,drin:m.drin&&m.grund!=='dusche',heim:m.heim,art:m.art,karriere:m.karriere}));
   stand.zeit=Date.now();try{localStorage.setItem('miniTerrarium1',JSON.stringify(stand))}catch(e){}
 }
@@ -368,7 +375,9 @@ function testBlatt(){
     {titel:'Tageszeit',text:modus?phase(MODI[modus])+' (Test)':'Echtzeit',knopf:'Weiter',fn:()=>{modus=(modus+1)%MODI.length;testBlatt()}},
     {titel:'Wetter',text:testWetter?WT[testWetter]+' (Test)':WT[wetter()]+' (nach Datum)',knopf:'Weiter',fn:()=>{const k=[null,'sonne','regen','nebel','schnee'];testWetter=k[(k.indexOf(testWetter)+1)%k.length];testBlatt()}},
     {titel:'Jahreszeit',text:testJZ===null?JZ[jahreszeit()]+' (nach Datum)':JZ[testJZ]+' (Test)',knopf:'Weiter',fn:()=>{testJZ=testJZ===null?0:testJZ===3?null:testJZ+1;testBlatt()}},
-    {titel:'Alles echt',text:'Zurück zu Uhr und Datum',knopf:'Zurück',fn:()=>{modus=0;testWetter=null;testJZ=null}}]);
+    {titel:'Alles echt',text:'Zurück zu Uhr und Datum',knopf:'Zurück',fn:()=>{modus=0;testWetter=null;testJZ=null}},
+    {titel:'Neues Spiel',text:'Löscht den Spielstand und würfelt einen neuen ersten Mini',knopf:'Neu …',fn:()=>blatt('Wirklich neu anfangen?','Münzen, Minis, Freundschaften, Karrieren und die Serie gehen verloren. Das lässt sich nicht rückgängig machen.',[
+      {titel:'Spielstand löschen',text:'Danach startet das Spiel mit einem zufälligen Mini',knopf:'Ja, löschen',fn:()=>{nichtSichern=true;try{localStorage.removeItem('miniTerrarium1')}catch(e){}location.reload()}}])}]);
 }
 // ---------- Persönlichkeit ----------
 // Jeder Mini hat zwei Eigenarten; sie wirken auf Laune, Bedürfnisse, Arbeit und Gedanken
@@ -391,7 +400,7 @@ function wuerfleArt(r1,r2){
   return [a];
 }
 const hat=(m,a)=>!!m.art&&m.art.includes(a);
-for(const m of minis){if(!m.art)m.art=wuerfleArt(zufall01(m.id*7+3),zufall01(m.id*13+5));if(!m.karriere)m.karriere={}}
+for(const m of minis){if(!m.art)m.art=m.zufallArt?wuerfleArt(Math.random(),Math.random()):wuerfleArt(zufall01(m.id*7+3),zufall01(m.id*13+5));delete m.zufallArt;if(!m.karriere)m.karriere={}}
 // Zuschlag oder Abzug auf die Laune, zu der ein Mini hinstrebt
 function launeBonus(m){
   const h=stunde(),wt=wetter(),fr=freundeVon(m);
@@ -623,8 +632,7 @@ $('aArbeit').addEventListener('click',()=>{
 function neuesAngebot(){
   const belegt=minis.map(m=>m.name),l=[];
   for(let i=0;i<3;i++){
-    const frei=NAMEN.filter(n=>!belegt.includes(n)&&!l.some(a=>a.name===n)),werte={};let summe=0;
-    for(const [k] of WERTE){werte[k]=zufall(1,4)+zufall(1,4)+(Math.random()<.35?zufall(1,2):0);summe+=werte[k]}
+    const frei=NAMEN.filter(n=>!belegt.includes(n)&&!l.some(a=>a.name===n)),werte=wuerfleWerte(),summe=Object.values(werte).reduce((a,b)=>a+b,0);
     l.push({name:frei[zufall(0,frei.length-1)]||'Mini '+(stand.nr+i+1),skin:zufall(0,figuren.length-1),art:wuerfleArt(Math.random(),Math.random()),werte,preis:Math.round((30+summe*summe*.32)/5)*5});
   }
   stand.angebot=l;
@@ -1129,6 +1137,7 @@ function runde(ms){const t=ms/1000,dt=Math.min(.1,t-zuletzt);zuletzt=t;
   if(gleit){const ax=cam.x,ay=cam.y;cam.x+=gleit.vx*dt;cam.y+=gleit.vy*dt;klemme();const b=Math.pow(.998,dt*1000);gleit.vx*=b;gleit.vy*=b;
     if(cam.x===ax)gleit.vx=0;if(cam.y===ay)gleit.vy=0;if(Math.hypot(gleit.vx,gleit.vy)*z<12)gleit=null}schritt(dt);zeichne(t);requestAnimationFrame(runde)}
 groesse();hud();balken();
+$('hinweis').textContent=$('hinweis').textContent.replace('dein Mini',sel().name);
 cam.x=sel().x-vw/z/2;cam.y=sel().y-vh/z/2;klemme();
 addEventListener('pagehide',sichern);document.addEventListener('visibilitychange',()=>{if(document.hidden)sichern()});setInterval(sichern,20000);
 requestAnimationFrame(runde);
