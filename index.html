@@ -210,7 +210,7 @@ function ersterMini(){let w;do{w=wuerfleWerte()}while(!kannEinsteigen(w));
 const wertName=k=>WERTE.find(w=>w[0]===k)[2];
 
 // ---------- Spielstand ----------
-let stand={geld:200,stufe:1,xp:0,frei:['A'],futter:[],zeit:0,minis:null,wahl:1,nr:1,angebot:null,freund:{},streit:{},tag:null,serie:{tage:0,letzter:'',best:0},festTag:''};
+let stand={geld:200,stufe:1,xp:0,frei:['A'],futter:[],zeit:0,minis:null,wahl:1,nr:1,angebot:null,freund:{},streit:{},liebe:{},tag:null,serie:{tage:0,letzter:'',best:0},festTag:''};
 try{const s=JSON.parse(localStorage.getItem('miniTerrarium1'));if(s&&s.frei)stand=Object.assign(stand,s)}catch(e){}
 if(!stand.minis){ // erster Start oder alter Spielstand mit nur einem Mini
   stand.minis=stand.werte?[{id:1,name:'Mika',skin:0,tx:stand.mx||8,ty:stand.my||9,n:stand.n||{h:70,s:80,e:75,l:70},werte:stand.werte,job:stand.job||null,drin:!!stand.drin,heim:'haus'}]:[ersterMini()];
@@ -240,8 +240,11 @@ function sichern(){
 // Freundschaft je Paar, 0 bis 100
 const paar=(a,b)=>Math.min(a.id,b.id)+'-'+Math.max(a.id,b.id);
 const freundWert=(a,b)=>stand.freund[paar(a,b)]||0;
-const STUFEN=[[90,'Beste Freunde'],[60,'Freunde'],[30,'Bekannte'],[0,'Fremde']];
+// Beziehung je Paar von -100 (Erzfeinde) bis 100; stand.liebe: 1 = verliebt, 2 = Paar
+const STUFEN=[[90,'Beste Freunde'],[60,'Freunde'],[30,'Bekannte'],[-15,'Fremde'],[-45,'Abneigung'],[-80,'Hass'],[-101,'Erzfeinde']];
 const freundStufe=v=>STUFEN.find(s=>v>=s[0])[1];
+const beziehung=(a,b)=>{const k=paar(a,b),v=stand.freund[k]||0;return stand.liebe[k]===2?(v>=100?'Unsterblich verliebt':'Ein Paar'):stand.liebe[k]===1?'Verliebt':stand.streit[k]&&v>-45?'Streit':freundStufe(v)};
+const ledig=(m,ausser)=>!minis.some(x=>x!==m&&x!==ausser&&stand.liebe[paar(m,x)]);
 const freundeVon=m=>minis.filter(x=>x!==m&&freundWert(m,x)>=60).length;
 const redeZuletzt={},streitSeit={};
 const bedarf=s=>s*s*30; // Erfahrung bis zur nächsten Stufe
@@ -277,7 +280,7 @@ function geheZu(m,x,y,plan,alle){
   if(p){m.fest=false;m.pfad=p.length?p:[[m.tx,m.ty]];m.drin=false;m.grund='';m.akt=null;m.plan=plan||null}return !!p}
 function zufallsziel(m){
   if(minis.length>1&&Math.random()<(hat(m,'gesellig')?.8:hat(m,'einzelgaenger')?.2:.55)){
-    const jetzt=performance.now(),andere=minis.filter(x=>x!==m&&!x.drin&&!x.fort&&!x.pfad.length&&!x.akt&&!(stand.streit[paar(m,x)]&&jetzt-(streitSeit[paar(m,x)]||-1e9)<120000));
+    const jetzt=performance.now(),andere=minis.filter(x=>x!==m&&!x.drin&&!x.fort&&!x.pfad.length&&!x.akt&&!(stand.streit[paar(m,x)]&&jetzt-(streitSeit[paar(m,x)]||-1e9)<120000)&&!((stand.freund[paar(m,x)]||0)<=-45&&jetzt-(streitSeit[paar(m,x)]||-1e9)<90000));
     if(andere.length){const x=andere[zufall(0,andere.length-1)];
       for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]].sort(()=>Math.random()-.5))if(geheZu(m,x.tx+dx,x.ty+dy)){x.wart=Math.max(x.wart,6);return}}
   }
@@ -401,6 +404,16 @@ function wuerfleArt(r1,r2){
 }
 const hat=(m,a)=>!!m.art&&m.art.includes(a);
 for(const m of minis){if(!m.art)m.art=m.zufallArt?wuerfleArt(Math.random(),Math.random()):wuerfleArt(zufall01(m.id*7+3),zufall01(m.id*13+5));delete m.zufallArt;if(!m.karriere)m.karriere={}}
+// Chemie eines Paars, 0 bis 1: fest je Paar, gleiche Eigenarten heben, gegensätzliche senken.
+// Unter 0,18 können sie sich nicht riechen, über 0,62 kann es funken.
+let chemieTest=null; // nur zum Ausprobieren
+function chemie(a,b){
+  if(chemieTest!==null)return chemieTest;
+  let c=zufall01(Math.min(a.id,b.id)*977+Math.max(a.id,b.id)*131+7);
+  for(const x of a.art)if(b.art.includes(x))c+=.1;
+  for(const g of GEGEN)if((hat(a,g[0])&&hat(b,g[1]))||(hat(a,g[1])&&hat(b,g[0])))c-=.12;
+  return grenz(c,0,1);
+}
 // Zuschlag oder Abzug auf die Laune, zu der ein Mini hinstrebt
 function launeBonus(m){
   const h=stunde(),wt=wetter(),fr=freundeVon(m);
@@ -412,7 +425,9 @@ function launeBonus(m){
   if(hat(m,'regenfan'))b+=wt==='regen'||wt==='nebel'?12:0;else if(wt==='regen')b-=4;
   if(hat(m,'sonnenkind'))b+=wt==='sonne'?10:-8;
   if(hat(m,'schmutzfink')&&m.n.s<50)b+=8;
-  for(const x of minis)if(x!==m){const k=paar(m,x);if(stand.streit[k])b-=x.heim===m.heim?10:5;else if(x.heim===m.heim&&freundWert(m,x)>=60)b+=4}
+  for(const x of minis)if(x!==m){const k=paar(m,x),v=stand.freund[k]||0,wg=x.heim===m.heim;
+    if(stand.liebe[k]===2)b+=wg?20:15;else if(stand.liebe[k]===1)b+=8;
+    else if(v<=-45)b-=wg?14:7;else if(stand.streit[k])b-=wg?10:5;else if(wg&&v>=60)b+=4}
   return b;
 }
 const raten=m=>({h:hat(m,'schleckermaul')?1.35:1,s:hat(m,'schmutzfink')?1.5:1,e:hat(m,'faulpelz')?.75:1});
@@ -680,33 +695,36 @@ function balken(){
   WERTE.forEach(([k],i)=>w.children[i].lastElementChild.textContent=Math.floor(m.werte[k]));
   const a=m.akt;
   const mit=a&&a.typ==='reden'&&minis.find(x=>x.id===a.mit);
-  $('lage').textContent=mit?'Unterhält sich mit '+mit.name:m.job?'Arbeitet '+ORTE[jobVon(m).ort].im+', noch '+restText(m)+' Min':m.grund==='dusche'?'Duscht gerade':m.drin?'Schläft · '+heimVon(m).name:a&&a.typ==='essen'?'Isst gerade':a&&a.typ==='baden'?'Badet im See':m.plan&&m.plan.typ==='arbeit'?'Auf dem Weg zur Arbeit':'Wohnt hier: '+heimVon(m).name;
+  const gegner=a&&a.typ==='pruegel'&&minis.find(x=>x.id===a.mit);
+  $('lage').textContent=gegner?'Prügelt sich mit '+gegner.name:mit?'Unterhält sich mit '+mit.name:m.job?'Arbeitet '+ORTE[jobVon(m).ort].im+', noch '+restText(m)+' Min':m.grund==='dusche'?'Duscht gerade':m.drin?'Schläft · '+heimVon(m).name:a&&a.typ==='essen'?'Isst gerade':a&&a.typ==='baden'?'Badet im See':m.plan&&m.plan.typ==='arbeit'?'Auf dem Weg zur Arbeit':'Wohnt hier: '+heimVon(m).name;
   $('art').textContent=m.art.map(a=>ARTEN[a].name).join(' · ');
   $('karr').textContent=Object.keys(ORTE).filter(o=>m.karriere[o]).map(o=>ORTE[o].name+': '+rangVon(m,o)[1]+' ('+m.karriere[o]+')').join(' · ');
   $('gedanke').textContent=m.letzter?'Denkt: „'+m.letzter+'“':'';
-  const fl=minis.filter(x=>x!==m).map(x=>[x,freundWert(m,x)]).filter(p=>p[1]>0).sort((p,q)=>q[1]-p[1]);
-  $('freunde').textContent=minis.length<2?'':fl.length?fl.map(p=>p[0].name+': '+(stand.streit[paar(m,p[0])]?'Streit':freundStufe(p[1]))+' ('+Math.round(p[1])+')'+(p[0].heim===m.heim?', wohnt mit':'')).join(' · '):'Kennt noch niemanden';
+  const fl=minis.filter(x=>x!==m).map(x=>[x,freundWert(m,x)]).filter(p=>stand.freund[paar(m,p[0])]!==undefined).sort((p,q)=>q[1]-p[1]);
+  $('freunde').textContent=minis.length<2?'':fl.length?fl.map(p=>p[0].name+': '+beziehung(m,p[0])+' ('+Math.round(p[1])+')'+(p[0].heim===m.heim?', wohnt mit':'')).join(' · '):'Kennt noch niemanden';
 }
 $('art').addEventListener('click',()=>{const m=sel();sag(m.art.map(a=>ARTEN[a].name+': '+ARTEN[a].text).join('. ')+'.')});
 // ---------- Tagesaufgaben und Serie ----------
 const datumText=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const heute=()=>datumText(new Date()),gestern=()=>datumText(new Date(Date.now()-864e5));
-const AUFGABEN=[
- {typ:'muenzen',text:n=>'Verdiene '+n+' Münzen mit Arbeit',n:()=>[40,60,90,140,200][Math.min(4,stand.stufe-1)]},
- {typ:'schichten',text:n=>'Schließe '+n+' Schichten ab',n:()=>Math.min(4,1+minis.length)},
- {typ:'fuettern',text:n=>'Lege '+n+' Portionen Essen hin',n:()=>3},
- {typ:'waschen',text:n=>'Lass '+n+'-mal waschen oder baden',n:()=>Math.min(3,1+minis.length)},
- {typ:'streicheln',text:n=>'Streichle '+n+'-mal einen Mini',n:()=>3},
- {typ:'gespraech',text:n=>'Erlebe '+n+' Gespräche zwischen Minis',n:()=>2,wenn:()=>minis.length>1},
- {typ:'schlaf',text:n=>'Lass einen Mini ausschlafen',n:()=>1},
- {typ:'ort_bau',text:n=>'Arbeite einmal im Baumarkt',n:()=>1},
- {typ:'ort_kiosk',text:n=>'Arbeite einmal im Pilz-Kiosk',n:()=>1},
- {typ:'ort_buero',text:n=>'Arbeite einmal im Büro',n:()=>1}
+const AUFGABEN=[ // lohn: Münzen je nach Aufwand
+ {typ:'muenzen',text:n=>'Verdiene '+n+' Münzen mit Arbeit',n:()=>[40,60,90,140,200][Math.min(4,stand.stufe-1)],lohn:n=>Math.round(n*.4)},
+ {typ:'schichten',text:n=>'Schließe '+n+' Schichten ab',n:()=>Math.min(4,1+minis.length),lohn:n=>n*15},
+ {typ:'fuettern',text:n=>'Lege '+n+' Portionen Essen hin',n:()=>3,lohn:n=>12},
+ {typ:'waschen',text:n=>'Lass '+n+'-mal waschen oder baden',n:()=>Math.min(3,1+minis.length),lohn:n=>n*10},
+ {typ:'streicheln',text:n=>'Streichle '+n+'-mal einen Mini',n:()=>3,lohn:n=>8},
+ {typ:'gespraech',text:n=>'Erlebe '+n+' Gespräche zwischen Minis',n:()=>2,wenn:()=>minis.length>1,lohn:n=>18},
+ {typ:'schlaf',text:n=>'Lass einen Mini ausschlafen',n:()=>1,lohn:n=>25},
+ {typ:'ort_bau',text:n=>'Arbeite einmal im Baumarkt',n:()=>1,lohn:n=>22},
+ {typ:'ort_kiosk',text:n=>'Arbeite einmal im Pilz-Kiosk',n:()=>1,lohn:n=>22},
+ {typ:'ort_buero',text:n=>'Arbeite einmal im Büro',n:()=>1,lohn:n=>22}
 ];
+const DREIERBONUS=50,WOCHENBONUS=300;
+const aufgabeLohn=a=>a.lohn||AUFGABEN.find(x=>x.typ===a.typ).lohn(a.ziel);
 function neueAufgaben(){ // drei Aufgaben, für denselben Tag immer dieselben
   const d=new Date(),basis=d.getFullYear()*372+d.getMonth()*31+d.getDate(),pool=AUFGABEN.filter(a=>!a.wenn||a.wenn()),l=[];
   for(let i=0;l.length<3&&i<60;i++){const a=pool[Math.floor(zufall01(basis*17+i*101)*pool.length)%pool.length];
-    if(!l.some(x=>x.typ===a.typ)&&!(a.typ.startsWith('ort_')&&l.some(x=>x.typ.startsWith('ort_'))))l.push({typ:a.typ,ziel:a.n(),ist:0,fertig:false})}
+    if(!l.some(x=>x.typ===a.typ)&&!(a.typ.startsWith('ort_')&&l.some(x=>x.typ.startsWith('ort_')))){const ziel=a.n();l.push({typ:a.typ,ziel,ist:0,fertig:false,lohn:a.lohn(ziel)})}}
   stand.tag={datum:heute(),aufgaben:l,bonus:false};
   if(stand.serie.letzter!==gestern()&&stand.serie.letzter!==heute())stand.serie.tage=0; // Serie gerissen
 }
@@ -715,21 +733,22 @@ function zaehle(typ,n){
   let warte=2600;
   for(const a of stand.tag.aufgaben)if(a.typ===typ&&!a.fertig){
     a.ist=Math.min(a.ziel,a.ist+(n||1));
-    if(a.ist>=a.ziel){a.fertig=true;const lohn=20+stand.stufe*5;stand.geld+=lohn;ep(8);setTimeout(()=>sag('Tagesaufgabe geschafft: +'+lohn+' Münzen.'),warte);warte+=2600}
+    if(a.ist>=a.ziel){a.fertig=true;const lohn=aufgabeLohn(a);stand.geld+=lohn;ep(8);setTimeout(()=>sag('Tagesaufgabe geschafft: +'+lohn+' Münzen.'),warte);warte+=2600}
   }
   if(!stand.tag.bonus&&stand.tag.aufgaben.every(a=>a.fertig)){
     stand.tag.bonus=true;stand.serie.tage=(stand.serie.letzter===gestern()?stand.serie.tage:0)+1;stand.serie.letzter=heute();stand.serie.best=Math.max(stand.serie.best||0,stand.serie.tage);
-    const b=40+Math.min(7,stand.serie.tage)*15;stand.geld+=b;ep(20);
-    setTimeout(()=>sag('Alle drei Tagesaufgaben geschafft! Bonus +'+b+' Münzen. Serie: '+stand.serie.tage+(stand.serie.tage===1?' Tag.':' Tage.')),warte);
+    const woche=stand.serie.tage%7===0,b=DREIERBONUS+(woche?WOCHENBONUS:0);stand.geld+=b;ep(woche?60:20);
+    setTimeout(()=>sag(woche?'Sieben Tage in Folge! Wochenbonus: +'+b+' Münzen.':'Alle drei Tagesaufgaben geschafft! Bonus +'+b+' Münzen. Serie: '+stand.serie.tage+(stand.serie.tage===1?' Tag.':' Tage.')),warte);
   }
   hud();
 }
 if(!stand.tag||stand.tag.datum!==heute())neueAufgaben();
 setInterval(()=>{if(stand.tag.datum!==heute()){neueAufgaben();hud();sag('Ein neuer Tag: drei neue Tagesaufgaben.')}},30000);
 $('aTag').addEventListener('click',()=>{
-  const s=stand.serie,morgen=40+Math.min(7,(s.letzter===heute()?s.tage:s.letzter===gestern()?s.tage+1:1))*15;
-  blatt('Tagesaufgaben',(stand.tag.bonus?'Für heute ist alles geschafft. Morgen gibt es drei neue.':'Jede Aufgabe bringt Münzen und Erfahrung. Alle drei zusammen bringen heute einen Bonus von '+morgen+' Münzen.')+' Serie: '+s.tage+(s.tage===1?' Tag':' Tage')+' in Folge'+(s.best>s.tage?' (Rekord '+s.best+')':'')+'. Der Bonus wächst bis zum siebten Tag.',
-    stand.tag.aufgaben.map(a=>({titel:AUFGABEN.find(x=>x.typ===a.typ).text(a.ziel),text:a.fertig?'Geschafft':a.ist+' von '+a.ziel,erledigt:a.fertig})));
+  const s=stand.serie,lebt=s.letzter===heute()||s.letzter===gestern(),tage=lebt?s.tage:0,bis=7-tage%7;
+  blatt('Tagesaufgaben',(stand.tag.bonus?'Für heute ist alles geschafft. Morgen gibt es drei neue. ':'Jede Aufgabe bringt Münzen, je schwerer, desto mehr. Alle drei zusammen bringen '+DREIERBONUS+' Münzen Bonus. ')
+    +'Serie: '+tage+(tage===1?' Tag':' Tage')+' in Folge'+(s.best>tage?' (Rekord '+s.best+')':'')+'. Noch '+bis+(bis===1?' Tag':' Tage')+' bis zum Wochenbonus von '+WOCHENBONUS+' Münzen.',
+    stand.tag.aufgaben.map(a=>({titel:AUFGABEN.find(x=>x.typ===a.typ).text(a.ziel),text:a.fertig?'Geschafft · +'+aufgabeLohn(a)+' Münzen':a.ist+' von '+a.ziel+' · Belohnung '+aufgabeLohn(a)+' Münzen',erledigt:a.fertig})));
 });
 // ---------- Seltene Ereignisse ----------
 let fest=null,besuch=null,schnuppe=null,regenbogenBis=0,stromausBis=0,ereignisT=40,letztesWetter=null;
@@ -769,6 +788,14 @@ function streitZeilen(a,b){
   return [grund,['Was denn? Du hast angefangen!','Wie redest du mit mir?','Jetzt mach mal halblang.'][zufall(0,2)],'Immer musst du recht haben.','Und du bist immer gleich beleidigt!','Ich rede nicht mehr mit dir.','Schön. Dann eben nicht.'];
 }
 function versoehnZeilen(a,b){return ['Du … wegen neulich.','Ja?','Es tut mir leid. Ich war blöd.','Mir auch. Wieder gut?','Wieder gut!','Komm, wir gehen ein Stück.']}
+function hassZeilen(a,b){return ['Du schon wieder.','Geh mir aus den Augen.','Ich kann dich nicht ausstehen!','Das beruht auf Gegenseitigkeit!','Verschwinde!','Verschwinde du doch!']}
+function friedenZeilen(a,b){return ['So kann es nicht weitergehen.','Da hast du ausnahmsweise recht.','Waffenstillstand?','… Na gut. Waffenstillstand.','Hand drauf.','Hand drauf.']}
+function flirtZeilen(a,b){return ['Du, '+b.name+' …','Ja?','Ich bin so gern in deiner Nähe.','Ich auch in deiner, '+a.name+'.','Wirklich?','Wirklich.']}
+function antragZeilen(a,b){return ['Ich muss dir etwas sagen.','Ich glaube, ich weiß es schon.','Ich habe mich in dich verliebt.','Ich mich auch in dich.','Wollen wir zusammen sein?','Ja! Ja, ja, ja!']}
+function paarZeilen(a,b){
+  const p=[['Ich habe dich vermisst.','Wir haben uns eben erst gesehen.','Trotzdem.','Ich dich auch.'],['Gehen wir später ein Stück?','Mit dir überallhin.','Am See entlang?','Am See entlang.'],['Du bist das Beste hier.','Nein, du.','Doch, du.','Na gut. Wir beide.'],['Woran denkst du?','An dich. Und ans Abendessen.','In der Reihenfolge?','Meistens.']];
+  return ['Na, mein Herz?','Na du!'].concat(p[zufall(0,p.length-1)],['Bis gleich.','Bis gleich, Liebes.']);
+}
 function zusammenziehen(a,b){ // beste Freunde ziehen zusammen, wenn bei einem von beiden ein Platz frei ist
   if(a.heim===b.heim)return '';
   const platz=id=>{const h=HEIME.find(x=>x.id===id);return stand.frei.includes(h.parz)&&minis.filter(m=>m.heim===id).length<h.plaetze};
@@ -789,6 +816,10 @@ function schrittMini(m,dt,h){
   if(m.akt){
     m.akt.t-=dt;
     if(m.akt.t<=0){const a=m.akt;m.akt=null;m.wart=1.5;
+      if(a.typ==='pruegel'){N.e=grenz(N.e-(a.sieger?10:20),0,100);N.s=grenz(N.s-25,0,100);N.l=grenz(N.l-(a.sieger?6:18),0,100);m.wart=1;
+        const o=minis.find(x=>x.id===a.mit);if(a.sieger&&o)sag(m.name+' gewinnt die Prügelei gegen '+o.name+'. Beide sehen übel aus.');
+        if(o)for(let i=0;i<20;i++){const x=m.tx+zufall(-6,6),y=m.ty+zufall(-6,6);if(Math.abs(x-o.tx)+Math.abs(y-o.ty)>4&&geheZu(m,x,y))break} // geht auf Abstand
+        sichern();return}
       if(a.typ==='reden'){N.l=grenz(N.l+(a.laune===undefined?6:a.laune),0,100);m.wart=2+Math.random()*3;return}
       if(a.typ==='essen'){const e=ESSEN.find(x=>x.id===(a.f.t||'apfel'));stand.futter=stand.futter.filter(f=>f!==a.f);N.h=grenz(N.h+e.satt,0,100);N.l=grenz(N.l+e.laune+(hat(m,'schleckermaul')?8:0),0,100);ep(5,m.name+' ist satt');}
       else{N.s=100;N.l=grenz(N.l+5,0,100);if(a.typ==='dusche'){tuerAuf(m.heim);m.drin=false;m.grund=''}ep(8,m.name+' ist frisch gewaschen');zaehle('waschen');}
@@ -900,6 +931,12 @@ function gedankeFuer(m){
   if(!andere.length)add(3,'Ein bisschen Gesellschaft wäre schön.','Ganz schön ruhig hier allein.','Ob bald jemand einzieht?','Mit wem soll ich nur reden?');
   for(const x of andere){
     const n=x.name,f=stand.freund[paar(m,x)];
+    const lb=stand.liebe[paar(m,x)];
+    if(lb===2){add(5,n+' und ich. Für immer.','Ich habe so ein Glück mit '+n+'.','Was '+n+' wohl gerade macht? Ich vermisse '+n+'.','Mit '+n+' ist jeder Tag schön.','Ob '+n+' gerade an mich denkt?');continue}
+    if(lb===1){add(5,'Ich muss ständig an '+n+' denken.','Ob '+n+' mich auch so mag?','Mein Herz klopft, wenn '+n+' kommt.','Soll ich es '+n+' sagen?');continue}
+    if(f<=-80){add(5,n+' ist mein Erzfeind.','Eines Tages zahle ich es '+n+' heim.','Wenn ich '+n+' nur sehe, koche ich.');continue}
+    if(f<=-45){add(5,'Ich kann '+n+' nicht ausstehen.',n+' geht mir so auf die Nerven.','Wehe, '+n+' kommt mir zu nahe.','Was bildet '+n+' sich eigentlich ein?');continue}
+    if(f<=-15){add(3,n+' und ich werden keine Freunde mehr.','Um '+n+' mache ich lieber einen Bogen.');continue}
     if(stand.streit[paar(m,x)]){add(4,'Ich bin noch sauer auf '+n+'.',n+' soll sich erst mal entschuldigen.','Vielleicht war ich zu hart zu '+n+'.','Mit '+n+' rede ich kein Wort mehr.');continue}
     if(x.heim===m.heim&&f>=60)add(1,'Schön, mit '+n+' zusammenzuwohnen.');
     if(f===undefined)add(2,'Wer ist eigentlich '+n+'?',n+' sieht nett aus. Ob ich mal Hallo sage?','Ich kenne '+n+' noch gar nicht.');
@@ -948,23 +985,39 @@ function gespraeche(){
     const a=minis[i],b=minis[k];if(!bereit(a)||!bereit(b))continue;
     const dx=b.tx-a.tx,dy=b.ty-a.ty;if(Math.abs(dx)+Math.abs(dy)!==1)continue;
     const key=paar(a,b);if(jetzt-(redeZuletzt[key]||-1e9)<45000)continue;
-    const erst=stand.freund[key]===undefined,vor=freundWert(a,b); // erst: noch nie miteinander geredet
+    const erst=stand.freund[key]===undefined,vor=freundWert(a,b),c=chemie(a,b),lieb=stand.liebe[key]||0; // erst: noch nie miteinander geredet
+    const stille=jetzt-(streitSeit[key]||-1e9),mies=Math.min(a.n.l,b.n.l)<30,gut=Math.min(a.n.l,b.n.l)>65,r=Math.random();
     let form='normal';
-    if(stand.streit[key]){if(jetzt-(streitSeit[key]||-1e9)<120000)continue;form='versoehnung'} // zwei Minuten Funkstille, dann vertragen sie sich
-    else if(!erst&&vor<90&&Math.random()<(Math.min(a.n.l,b.n.l)<30?.5:.06))form='streit';
+    if(lieb===2)form='paar';
+    else if(vor<=-45){if(stille<90000)continue;form=gut&&r<.3?'frieden':r<.6?'pruegel':'hass'} // Hass: Prügelei, Beschimpfung oder selten Waffenstillstand
+    else if(stand.streit[key]){if(stille<120000)continue;form=(c<.18||vor<-15)&&r<.6?'streit':'versoehnung'} // nach der Funkstille vertragen sie sich, außer die Chemie stimmt nicht
+    else if(!erst&&r<(mies?.5:c<.18?.4:vor>=90||lieb?0:.06))form='streit';
+    else if(lieb===1&&vor>=90&&ledig(a,b)&&ledig(b,a))form='antrag';
+    else if(!lieb&&!erst&&vor>=75&&c>.62&&gut&&ledig(a)&&ledig(b)&&r<.6)form='flirt'; // es funkt nur, wenn alles passt
     redeZuletzt[key]=jetzt;
-    const tempo=(hat(a,'einzelgaenger')?.7:1)*(hat(b,'einzelgaenger')?.7:1);
-    const neu=form==='streit'?Math.max(0,vor-12):form==='versoehnung'?Math.min(100,vor+14):Math.min(100,vor+(4+(Math.floor(a.werte.cha)+Math.floor(b.werte.cha))/4)*tempo);
+    const tempo=(hat(a,'einzelgaenger')?.7:1)*(hat(b,'einzelgaenger')?.7:1)*(c<.18?.4:1);
+    const neu=grenz(form==='streit'?vor-12:form==='hass'?vor-8:form==='pruegel'?vor-6:form==='frieden'?vor+30:form==='versoehnung'?vor+14:form==='flirt'?vor+8:form==='antrag'?vor+6:form==='paar'?vor+1.5:vor+(4+(Math.floor(a.werte.cha)+Math.floor(b.werte.cha))/4)*tempo,-100,100);
     stand.freund[key]=neu;
-    if(form==='streit'){stand.streit[key]=1;streitSeit[key]=jetzt}else if(form==='versoehnung')delete stand.streit[key];
+    if(form==='streit'||form==='hass'||form==='pruegel'){stand.streit[key]=1;streitSeit[key]=jetzt}else if(form==='versoehnung'||form==='frieden')delete stand.streit[key];
+    if(neu<30&&lieb===1)delete stand.liebe[key];
     a.richt=dx>0?0:dx<0?2:dy>0?3:1;b.richt=dx>0?2:dx<0?0:dy>0?1:3;
-    const fr=neu>=60,zeilen=erst?vorstellung(a,b):form==='streit'?streitZeilen(a,b):form==='versoehnung'?versoehnZeilen(a,b):plauderei(a,b,fr),dauer=zeilen.length*ZEILE;
-    const laune=form==='streit'?-10:form==='versoehnung'?12:fr?10:6;
-    a.akt={typ:'reden',t:dauer,dauer,mit:b.id,freund:fr,zeilen,ich:0,laune};b.akt={typ:'reden',t:dauer,dauer,mit:a.id,freund:fr,zeilen,ich:1,laune};
+    if(form==='pruegel'){ // Rauferei statt Worte: Staubwolke, danach sind beide erledigt
+      const sieger=a.werte.kra+Math.random()*4>=b.werte.kra+Math.random()*4?a:b;
+      a.akt={typ:'pruegel',t:4.5,mit:b.id,sieger:sieger===a};b.akt={typ:'pruegel',t:4.5,mit:a.id,sieger:sieger===b};a.gedanke=b.gedanke=null;
+      sag(a.name+' und '+b.name+' prügeln sich!');sichern();continue}
+    const fr=neu>=60,zeilen=erst?vorstellung(a,b):form==='streit'?streitZeilen(a,b):form==='hass'?hassZeilen(a,b):form==='frieden'?friedenZeilen(a,b):form==='versoehnung'?versoehnZeilen(a,b):form==='flirt'?flirtZeilen(a,b):form==='antrag'?antragZeilen(a,b):form==='paar'?paarZeilen(a,b):plauderei(a,b,fr),dauer=zeilen.length*ZEILE;
+    const laune={streit:-10,hass:-12,frieden:10,versoehnung:12,flirt:14,antrag:25,paar:14}[form]||(fr?10:6),herzen=form==='flirt'||form==='antrag'||form==='paar';
+    a.akt={typ:'reden',t:dauer,dauer,mit:b.id,freund:fr,zeilen,ich:0,laune,herzen};b.akt={typ:'reden',t:dauer,dauer,mit:a.id,freund:fr,zeilen,ich:1,laune,herzen};
     zaehle('gespraech');
-    let text=erst?a.name+' und '+b.name+' lernen sich kennen.':form==='streit'?a.name+' und '+b.name+' streiten sich.':'';
+    let text=erst?a.name+' und '+b.name+' lernen sich kennen.':form==='streit'?a.name+' und '+b.name+' streiten sich.':form==='hass'?a.name+' und '+b.name+' beschimpfen sich.':'';
     if(form==='versoehnung'){ep(10);text=a.name+' und '+b.name+' vertragen sich wieder.'}
-    if(neu>vor&&freundStufe(neu)!==freundStufe(vor)){const neuLevel=ep(10);text=a.name+' und '+b.name+' sind jetzt '+freundStufe(neu)+'.'+(neu>=90?zusammenziehen(a,b):'')+(neuLevel?' Stufe '+stand.stufe+' erreicht!':'')}
+    if(form==='frieden'){ep(15);text=a.name+' und '+b.name+' schließen Waffenstillstand.'}
+    if(form==='flirt'){stand.liebe[key]=1;ep(15);text='Zwischen '+a.name+' und '+b.name+' hat es gefunkt!'}
+    if(form==='antrag'){stand.liebe[key]=2;const neuLevel=ep(40);text=a.name+' und '+b.name+' sind jetzt ein Paar!'+zusammenziehen(a,b)+(neuLevel?' Stufe '+stand.stufe+' erreicht!':'')}
+    else if(freundStufe(neu)!==freundStufe(vor)&&form!=='flirt'){
+      if(neu>vor){if(neu>=30){const neuLevel=ep(10);text=a.name+' und '+b.name+' sind jetzt '+freundStufe(neu)+'.'+(neu>=90?zusammenziehen(a,b):'')+(neuLevel?' Stufe '+stand.stufe+' erreicht!':'')}}
+      else text=a.name+' und '+b.name+(neu<=-80?' sind jetzt Erzfeinde.':neu<=-45?' hassen sich jetzt.':neu<=-15?' können sich nicht mehr leiden.':' entfremden sich: '+freundStufe(neu)+'.')}
+    if(neu>=100&&lieb===2&&vor<100)text=a.name+' und '+b.name+' sind unsterblich verliebt.';
     if(text){sag(text);sichern()}
   }
 }
@@ -1003,17 +1056,26 @@ function zeichneBlasen(){
 function zeichneMini(m,t){
   const N=m.n,lauf=m.pfad.length>0,f=Math.floor(t*(lauf?10:5)+m.id)%6,mx=Math.round(m.x),my=Math.round(m.y);
   ctx.fillStyle='rgba(0,0,0,.22)';ctx.beginPath();ctx.ellipse(m.x+8,m.y+14,5,2,0,0,7);ctx.fill();
-  ctx.drawImage(figuren[m.skin%figuren.length],(m.richt*6+f)*16,lauf?64:32,16,32,mx,my-18,16,32);
+  const kampf=m.akt&&m.akt.typ==='pruegel',kx=kampf?Math.round(Math.sin(t*38+m.id)*2):0,ky=kampf?Math.round(Math.cos(t*31+m.id*2)*1.5):0;
+  ctx.drawImage(figuren[m.skin%figuren.length],(m.richt*6+(kampf?Math.floor(t*14)%6:f))*16,lauf||kampf?64:32,16,32,mx+kx,my-18+ky,16,32);
+  if(kampf&&m.id<m.akt.mit){ // Staubwolke über beiden, mit Sternen
+    const o=minis.find(x=>x.id===m.akt.mit)||m,cx=(m.x+o.x)/2+8,cy=(m.y+o.y)/2-2;
+    for(let i=0;i<9;i++){const w=t*7+i*2.1,r=5+((i*5)%4);ctx.fillStyle=i%3?'rgba(226,222,212,.9)':'rgba(198,192,180,.9)';ctx.beginPath();ctx.arc(cx+Math.cos(w)*9+Math.sin(w*1.7)*3,cy+Math.sin(w*1.3)*7,r,0,7);ctx.fill()}
+    ctx.fillStyle='#f0c030';for(let i=0;i<4;i++){const w=t*5+i*1.6,x=Math.round(cx+Math.cos(w)*17),y=Math.round(cy-6+Math.sin(w*1.4)*12);ctx.fillRect(x-1,y,3,1);ctx.fillRect(x,y-1,1,3)}
+    ctx.fillStyle='#3b2414';ctx.font='600 7px "Pixelify Sans",monospace';ctx.textAlign='center';ctx.fillText(['#!','@#','!!','*!'][Math.floor(t*5)%4],Math.round(cx+Math.sin(t*9)*6),Math.round(cy-14));
+  }
   // Karriere-Abzeichen: Bronze, Silber, Gold für den höchsten Rang
   const rg=Math.max(...Object.keys(ORTE).map(o=>rangVon(m,o)[0]));
   if(rg>=3){ctx.fillStyle='#3b2414';ctx.fillRect(mx+11,my-4,4,4);ctx.fillStyle=rg>=25?'#f0c030':rg>=10?'#d5dde6':'#c07a3a';ctx.fillRect(mx+12,my-3,2,2)}
   const a=m.akt;let frei=true;
   if(fest&&m.fest&&!a&&Math.floor(t*2+m.id)%3){ctx.fillStyle='#3b2414';const ny=my-24-Math.round(Math.sin(t*3+m.id)*2);ctx.fillRect(mx+9,ny,1,6);ctx.fillRect(mx+10,ny,3,1);ctx.fillRect(mx+7,ny+5,3,2)}
-  if(a&&a.typ==='baden'){ctx.fillStyle='#bfe6f5';for(let i=0;i<5;i++){const p=(t*1.6+i*.2)%1;ctx.fillRect(mx+10+i*3,my+2-Math.sin(p*3.14)*12-i%2*3,2,2)}frei=false}
+  if(a&&a.typ==='pruegel')frei=false;
+  else if(a&&a.typ==='baden'){ctx.fillStyle='#bfe6f5';for(let i=0;i<5;i++){const p=(t*1.6+i*.2)%1;ctx.fillRect(mx+10+i*3,my+2-Math.sin(p*3.14)*12-i%2*3,2,2)}frei=false}
   else if(a&&a.typ==='essen'){if(Math.floor(t*4)%2)symbol('h',mx+12,my-14);frei=false}
   else if(a&&a.typ==='reden'){frei=false;
     const i=Math.min(a.zeilen.length-1,Math.floor((a.dauer-a.t)/ZEILE));
-    if(i%2===a.ich)blasen.push({x:m.x+8,y:m.y-20,text:a.zeilen[i]});}
+    if(i%2===a.ich)blasen.push({x:m.x+8,y:m.y-20,text:a.zeilen[i]});
+    else if(a.herzen){const p=(t*.7+m.id*.37)%1;ctx.globalAlpha=1-p;symbol('l',mx+5,my-22-Math.round(p*10));ctx.globalAlpha=1}}
   else if(m.gedanke&&m.herz<=0){frei=false;blasen.push({x:m.x+8,y:m.y-20,text:m.gedanke.text,denk:true})}
   else if(m.herz>0){ctx.globalAlpha=Math.min(1,m.herz);symbol('l',mx+5,my-24-(1.2-m.herz)*8);ctx.globalAlpha=1;frei=false}
   else if(!lauf||Math.floor(t)%4<2){
