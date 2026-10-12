@@ -928,7 +928,7 @@ function platzSuchen([cx,cy],ok){ // nächster passender Platz in Ringen um die 
 // Ein Planeintrag ist heute erledigt, sobald planLauf[id] = heute ist. planStatus[id] = {tag, text} sagt, was heute damit passiert ist.
 // Kann ein Termin gerade nicht starten (Mini isst, ist zu müde, arbeitet noch), wird er alle 15 Sekunden neu versucht, bis zu einer Stunde lang.
 let aktivSeit=Date.now(); // seit wann das Spiel ohne Pause läuft: was davor begann, hat der Mini „verpasst, aber erledigt“
-const liveIds=new Set(); // in dieser Sitzung geänderte Einträge laufen immer live, nie nachträglich
+const liveIds=new Map(); // id -> Tag: gerade auf „jetzt“ oder kurz davor gestellt, startet live (der Mini läuft los)
 const WARTEN=60; // Minuten, so lange wird ein Termin nachgeholt
 const uhr=d=>String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
 function planEssen(e){ // gibt einen kurzen Bericht zurück
@@ -969,7 +969,7 @@ function planArbeit(m,e,t){
   if(m.klinik)return {fertig:true,text:'Fällt aus: '+m.name+' liegt im Krankenhaus.'};
   const f=jobFehlt(m,j);if(f)return {fertig:true,text:'Fällt aus: '+j.name+'. '+f+'.'};
   const d=new Date();d.setHours(0,0,0,0);const min=e.min||j.dauer,start=d.getTime()+t*60000,ende=start+min*60000,jetzt=Date.now(),o=ORTE[j.ort];
-  const verpasst=start<aktivSeit-30000&&!liveIds.has(e.id); // Spiel war zu oder im Hintergrund, als die Schicht anfing
+  const verpasst=start<aktivSeit-30000&&liveIds.get(e.id)!==heute(); // Spiel war zu oder im Hintergrund, als die Schicht anfing: Mini ist schon dort
   if(m.fort)return {warte:m.name+' ist noch bei der Arbeit'};
   if(verpasst){
     const hin=()=>{m.drin=false;m.grund='';m.r=null;m.akt=null;m.plan=null;m.pfad=[];m.tx=o.tile[0];m.ty=o.tile[1];m.x=m.tx*T;m.y=m.ty*T;m.job={id:j.id,ende,team:false,min};m.fort=true;tuerAuf(o.tuer)};
@@ -996,7 +996,8 @@ function planTermin(m,e,t){
   return {fertig:true,text:''};
 }
 function planPruefen(){
-  if(!$('plan').hidden)return; // während du den Plan bearbeitest, startet nichts
+  if(!$('plan').hidden||document.hidden)return; // während du den Plan bearbeitest oder das Spiel im Hintergrund ist, startet nichts
+  if(Date.now()-echtZuletzt>20000)aktivSeit=Date.now(); // gerade aus dem Hintergrund zurück: was in der Pause begann, ist schon passiert
   const jm=jetztMin(),tag=heute(),S=stand.planStatus;let geaendert=false;
   const offen=e=>stand.planLauf[e.id]!==tag&&jm>=zeitMin(e.zeit);
   const fertig=(e,text)=>{stand.planLauf[e.id]=tag;S[e.id]={tag,text};geaendert=true};
@@ -1079,8 +1080,9 @@ $('pZu').addEventListener('click',()=>{
   planSync();
   if(planEdit){const jm=jetztMin();
     // geänderte Uhrzeit: bis zehn Minuten zurück läuft der Eintrag heute noch (sofort), weiter zurück erst ab morgen
-    for(const e of planEdit.geaendert){if(!e.id)continue;delete stand.planStatus[e.id];liveIds.add(e.id);
-      if(zeitMin(e.zeit)>=jm-10)delete stand.planLauf[e.id];else stand.planLauf[e.id]=heute()}}
+    for(const e of planEdit.geaendert){if(!e.id)continue;delete stand.planStatus[e.id];const t=zeitMin(e.zeit);
+      if(t>=jm-10)delete stand.planLauf[e.id];else stand.planLauf[e.id]=heute();
+      if(t<=jm&&t>=jm-10)liveIds.set(e.id,heute());else liveIds.delete(e.id)}}
   planEdit=null;
   // Einträge, die es nicht mehr gibt, vergessen
   const ids=new Set(stand.plan.essen.map(e=>e.id).concat(...Object.values(stand.plan.minis).map(p=>p.termine.map(e=>e.id))));
@@ -2504,7 +2506,8 @@ function runde(ms){const t=ms/1000,dt=Math.min(.1,t-zuletzt);zuletzt=t;nachholen
 groesse();hud();balken();
 $('hinweis').textContent=$('hinweis').textContent.replace('dein Mini',sel().name);
 cam.x=sel().x-vw/z/2;cam.y=sel().y-vh/z/2;klemme();
-addEventListener('pagehide',sichern);document.addEventListener('visibilitychange',()=>{if(document.hidden)sichern()});setInterval(sichern,20000);
+addEventListener('pagehide',sichern);document.addEventListener('visibilitychange',()=>{if(document.hidden)sichern();else planPruefen()});
+addEventListener('pageshow',e=>{if(e.persisted)planPruefen()}); // iOS: Seite aus dem Zwischenspeicher zurücksetInterval(sichern,20000);
 requestAnimationFrame(runde);
 </script>
 
