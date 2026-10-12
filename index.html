@@ -64,7 +64,16 @@ body.bauen #hinweis{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
 #art{background:none;border:0;padding:0;text-align:left;font-weight:600}
 #karr:empty{display:none}
 #aTag{position:fixed;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 40px)}
-#aKlinik{position:fixed;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 74px);color:var(--rot)}
+#aErfolg{position:fixed;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 74px)}
+#aKlinik{position:fixed;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 108px);color:var(--rot)}
+/* Münzen warten aufs Abholen: Knopf wippt und bekommt eine Goldmünze */
+.chip.abholen{animation:winken 1.3s ease-in-out infinite}
+.chip.abholen::after{content:'';flex:none;width:7px;height:7px;margin-left:2px;align-self:center;background:var(--gold);box-shadow:0 0 0 1px var(--tinte)}
+@keyframes winken{50%{filter:brightness(1.22) saturate(1.4);transform:translateY(-2px)}}
+.muenzflug{position:fixed;z-index:30;font:600 15px var(--pixel);color:var(--gold);pointer-events:none;white-space:nowrap;
+  text-shadow:1px 0 0 var(--tinte),-1px 0 0 var(--tinte),0 1px 0 var(--tinte),0 -1px 0 var(--tinte);animation:muenzflug 1.4s ease-out forwards}
+@keyframes muenzflug{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-30px)}}
+#blatt h3.gruppe{margin:16px 0 0;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.7}
 #aTag.fertig{filter:brightness(1.08) saturate(1.3)}
 .posten.ohne{grid-template-columns:1fr}
 .posten .erledigt{color:var(--gras);font-weight:600}
@@ -103,9 +112,10 @@ body.bauen #hinweis{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
   #hinweis{bottom:calc(env(safe-area-inset-bottom,0px) + 6px);right:120px;left:max(16px,env(safe-area-inset-left,0px));max-width:420px}
   #bogen{grid-template-columns:1fr;max-height:calc(100vh - 110px);overflow-y:auto}
   #bauLeiste{left:auto;width:330px}
+  #aKlinik{right:calc(max(16px,env(safe-area-inset-right,0px)) + 124px);top:calc(env(safe-area-inset-top,0px) + 74px)}
   body.bauen #hinweis{bottom:calc(env(safe-area-inset-bottom,0px) + 6px);right:370px}
 }
-@media (prefers-reduced-motion:reduce){#hinweis{transition:none}}
+@media (prefers-reduced-motion:reduce){#hinweis{transition:none}.chip.abholen{animation:none}}
 </style>
 </head>
 <body>
@@ -132,6 +142,7 @@ body.bauen #hinweis{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
   </div>
 </div>
 <button id="aTag" class="tafel chip"><small>Tag</small><span id="tagStand">0/3</span><small id="serie"></small></button>
+<button id="aErfolg" class="tafel chip"><small>Erfolge</small><span id="erfolgStand">0/50</span></button>
 <button id="aKlinik" class="tafel chip" hidden><small>Klinik</small><span id="klinikZahl">1</span></button>
 <div id="hinweis" class="tafel chip">Tippe auf den Boden, dann läuft dein Mini dorthin. Wische, um dich umzusehen, und zoome mit zwei Fingern. Tippe einen Mini an, um ihn auszuwählen.</div>
 <div id="aktionen">
@@ -308,6 +319,11 @@ if(!stand.minis){ // erster Start oder alter Spielstand mit nur einem Mini
   stand.minis=stand.werte?[{id:1,name:'Mika',skin:0,tx:stand.mx||8,ty:stand.my||9,n:stand.n||{h:70,s:80,e:75,l:70},werte:stand.werte,job:stand.job||null,drin:!!stand.drin,heim:'haus'}]:[ersterMini()];
   for(const k of ['mx','my','n','werte','job','drin'])delete stand[k];
 }
+// Lebenszähler für Erfolge; Schichten aus den Karrieren übernehmen, damit alte Spielstände nicht bei null anfangen
+if(!stand.zahl){stand.zahl={schichten:stand.minis.reduce((s,m)=>s+Object.values(m.karriere||{}).reduce((a,b)=>a+b,0),0)}}
+if(!stand.erfolge)stand.erfolge={}; // id -> 1 geschafft, 2 abgeholt
+if(!stand.gesehen)stand.gesehen={w:{},j:{}};
+if(!Array.isArray(stand.offen))stand.offen=[]; // nicht abgeholte Belohnungen vergangener Tage
 // Einrichtung: beim ersten Start mit der Grundausstattung der Welt (Lampen, Bänke, Stühle …)
 if(!Array.isArray(stand.deko)){stand.deko=D.deko0.map((d,i)=>({id:i+1,k:d.k,x:d.x,y:d.y}));stand.dekoNr=stand.deko.length}
 stand.deko=stand.deko.filter(d=>KAT[d.k]&&D.kgeo[d.k]);for(const d of stand.deko)delete d.weg;
@@ -614,7 +630,7 @@ function tippe(x,y){
   if(bau){bauTipp(wx,wy,tx,ty);return}
   const p=parzVon(tx,ty);
   if(!istFrei(p)){zeigeDialog(p);return}
-  if(besuch&&Math.abs(wx-(besuch.x+8))<Math.max(16,22/z)&&wy>besuch.y-26-22/z&&wy<besuch.y+20+6/z){const g=besuch.geschenk;besuch=null;stand.geld+=g;ep(10);hud();sichern();sag('Der Postbote bringt ein Päckchen: '+g+' Münzen. Dann radelt er weiter.');return}
+  if(besuch&&Math.abs(wx-(besuch.x+8))<Math.max(16,22/z)&&wy>besuch.y-26-22/z&&wy<besuch.y+20+6/z){const g=besuch.geschenk;besuch=null;stand.geld+=g;ep(10);zaehle('post');hud();sichern();sag('Der Postbote bringt ein Päckchen: '+g+' Münzen. Dann radelt er weiter.');return}
   if(legen){futterLegen(tx,ty);return}
   const rand=Math.max(10,8/z); // bei kleinem Zoom großzügiger treffen
   const treffer=minis.filter(m=>!m.drin&&!m.fort&&Math.abs(wx-(m.x+8))<rand&&wy>m.y-18-rand/2&&wy<m.y+16+rand/2).sort((a,b)=>Math.hypot(wx-a.x-8,wy-a.y)-Math.hypot(wx-b.x-8,wy-b.y))[0];
@@ -629,7 +645,7 @@ function tippe(x,y){
   if(m.grund==='dusche')return;
   const schlief=m.drin||bettzeit(m,stunde());
   wecken(m);
-  if(geheZu(m,tx,ty)){marke={x:tx,y:ty,t:1};if(schlief)sag(m.name+' ist wach und läuft los.');else $('hinweis').classList.add('aus')}
+  if(geheZu(m,tx,ty)){marke={x:tx,y:ty,t:1};zaehle('laufen');if(schlief)sag(m.name+' ist wach und läuft los.');else $('hinweis').classList.add('aus')}
   else sag('Dort kommt '+m.name+' nicht hin.');
 }
 function setzeZoom(neu,mx,my){ // Weltpunkt unter (mx,my) bleibt an Ort und Stelle
@@ -673,7 +689,9 @@ $('vor').addEventListener('click',()=>blaettern(-1));$('nach').addEventListener(
 // ---------- Auswahlblatt: Titel, Text und Posten mit je einem Knopf ----------
 function blatt(titel,text,posten){
   $('bTitel').textContent=titel;$('bText').textContent=text;const l=$('bListe');l.textContent='';
-  for(const p of posten){const d=document.createElement('div');d.className='posten';
+  for(const p of posten){
+    if(p.kopf){const h=document.createElement('h3');h.className='gruppe';h.textContent=p.titel;l.append(h);continue}
+    const d=document.createElement('div');d.className='posten';
     const b=document.createElement('b');b.textContent=p.titel;const sp=document.createElement('span');sp.textContent=p.text;if(p.fehlt)sp.className='fehlt';
     if(p.erledigt)sp.className='erledigt';
     if(!p.knopf){d.classList.add('ohne');d.append(b,sp);l.append(d);continue}
@@ -723,7 +741,7 @@ function futterLegen(tx,ty){
     if(stand.futter.length>=8){sag('Es steht schon genug Essen herum.');setLegen(null);return}
     if(stand.geld<e.preis){sag('Dafür reichen die Münzen nicht.');setLegen(null);return}
     stand.geld-=e.preis;const f={x,y,t:e.id,rest:e.portionen,rufBis:Date.now()+180000};
-    stand.futter.push(f);sperreNeu();umleiten();zaehle('fuettern');hud();sichern();setLegen(null);rufeZumEssen(f);
+    stand.futter.push(f);sperreNeu();umleiten();zaehle('fuettern');zaehle('buffet');hud();sichern();setLegen(null);rufeZumEssen(f);
     sag(e.name.replace(' für alle','')+' ist aufgebaut! '+e.portionen+' Portionen, alle dürfen sich bedienen.');return}
   if(!begehbar(tx,ty)||belegtVonEssen(tx,ty)){sag('Hier ist kein Platz für Essen.');return}
   if(stand.futter.length>=8){sag('Es liegen schon acht Portionen herum.');setLegen(null);return}
@@ -771,7 +789,7 @@ function feierabend(m,bezahlt){
   const rVor=rangVon(m,j.ort)[1];m.karriere[j.ort]=(m.karriere[j.ort]||0)+1;const rNach=rangVon(m,j.ort)[1],hoch=rNach!==rVor;
   const mehr=Math.floor(m.werte[j.wert])>vor,neu=ep(5+j.dauer+(hoch?20:0));
   sag(m.name+' hat Feierabend: +'+lohn+' Münzen.'+(hoch?' Befördert: jetzt '+rNach+' '+ORTE[j.ort].im+'!':'')+(mehr?' '+wertName(j.wert)+' steigt auf '+Math.floor(m.werte[j.wert])+'.':'')+(neu?' Stufe '+stand.stufe+' erreicht!':''));
-  zaehle('muenzen',lohn);zaehle('schichten');zaehle('ort_'+j.ort);
+  zaehle('muenzen',lohn);zaehle('schichten');zaehle('ort_'+j.ort);if(team)zaehle('team');
   hud();sichern();
 }
 const kannArbeiten=(x,j)=>stand.stufe>=j.stufe&&Math.floor(x.werte[j.wert])>=j.min&&((x.karriere||{})[j.ort]||0)>=(j.erf||0)&&x.n.h>=25&&x.n.e>=25&&(x.n.s>=20||hat(x,'schmutzfink'));
@@ -848,7 +866,9 @@ $('dKauf').addEventListener('click',()=>{
 // ---------- Anzeige ----------
 function hud(){$('geld').textContent=stand.geld;$('stufe').textContent=stand.stufe;$('ep').textContent=stand.xp+'/'+bedarf(stand.stufe);$('anzahl').textContent=minis.length+'/'+plaetzeGesamt();
   {const k=minis.filter(m=>m.klinik).length;$('aKlinik').hidden=!k;$('klinikZahl').textContent=k}
-  if(stand.tag){const f=stand.tag.aufgaben.filter(a=>a.fertig).length;$('tagStand').textContent=f+'/3';$('aTag').classList.toggle('fertig',f===3);$('serie').textContent=stand.serie.tage?'Serie '+stand.serie.tage:''}}
+  if(stand.tag){const f=stand.tag.aufgaben.filter(a=>a.fertig).length;$('tagStand').textContent=f+'/3';$('aTag').classList.toggle('fertig',f===3);$('serie').textContent=stand.serie.tage?'Serie '+stand.serie.tage:'';
+    $('aTag').classList.toggle('abholen',tagAbholbar().length>0)}
+  {$('erfolgStand').textContent=ERFOLGE.filter(e=>stand.erfolge[e.id]).length+'/'+ERFOLGE.length;$('aErfolg').classList.toggle('abholen',ERFOLGE.some(e=>stand.erfolge[e.id]===1))}}
 let hudT=0;
 function balken(){
   const m=sel(),N=m.n;
@@ -885,8 +905,100 @@ const AUFGABEN=[ // lohn: Münzen je nach Aufwand
  {typ:'ort_buero',text:n=>'Arbeite einmal im Büro',n:()=>1,lohn:n=>22}
 ];
 const DREIERBONUS=50,WOCHENBONUS=300;
+// ---------- Erfolge ----------
+// wert(): aktueller Stand, ziel: ab wann geschafft, lohn: Münzen zum Abholen
+const Z=k=>stand.zahl[k]||0;
+const maxRang=()=>Math.max(0,...minis.map(m=>Math.max(...Object.keys(ORTE).map(o=>rangVon(m,o)[0]))));
+const maxFreund=()=>Math.max(0,...Object.values(stand.freund));
+const ERFOLGE=[
+ // Erste Schritte
+ {id:'laufen',gruppe:'Erste Schritte',name:'Erster Ausflug',text:'Schicke einen Mini irgendwohin',wert:()=>Z('laufen'),ziel:1,lohn:10},
+ {id:'futter',gruppe:'Erste Schritte',name:'Guten Appetit',text:'Lege zum ersten Mal Essen hin',wert:()=>Z('fuettern'),ziel:1,lohn:10},
+ {id:'wasch',gruppe:'Erste Schritte',name:'Frisch gewaschen',text:'Lass einen Mini waschen oder baden',wert:()=>Z('waschen'),ziel:1,lohn:10},
+ {id:'schlaf',gruppe:'Erste Schritte',name:'Ausgeschlafen',text:'Ein Mini schläft sich richtig aus',wert:()=>Z('schlaf'),ziel:1,lohn:10},
+ {id:'streichel',gruppe:'Erste Schritte',name:'Streicheleinheit',text:'Streichle einen Mini',wert:()=>Z('streicheln'),ziel:1,lohn:10},
+ {id:'schicht',gruppe:'Erste Schritte',name:'Erster Arbeitstag',text:'Schließe die erste Schicht ab',wert:()=>Z('schichten'),ziel:1,lohn:15},
+ {id:'einzug',gruppe:'Erste Schritte',name:'Zuwachs',text:'Ein zweiter Mini zieht ein',wert:()=>minis.length,ziel:2,lohn:20},
+ {id:'kennen',gruppe:'Erste Schritte',name:'Hallo Nachbar',text:'Zwei Minis lernen sich kennen',wert:()=>Object.keys(stand.freund).length,ziel:1,lohn:15},
+ {id:'gebiet',gruppe:'Erste Schritte',name:'Neuland',text:'Schalte das erste neue Gebiet frei',wert:()=>stand.frei.length-1,ziel:1,lohn:25},
+ {id:'tag',gruppe:'Erste Schritte',name:'Tagwerk',text:'Schaffe eine Tagesaufgabe',wert:()=>Z('tagAufgabe'),ziel:1,lohn:15},
+ // Essen und Pflege
+ {id:'futter25',gruppe:'Essen und Pflege',name:'Futterspender',text:'Lege 25-mal Essen hin',wert:()=>Z('fuettern'),ziel:25,lohn:30},
+ {id:'buffet',gruppe:'Essen und Pflege',name:'Picknickzeit',text:'Baue ein Essen für alle auf',wert:()=>Z('buffet'),ziel:1,lohn:20},
+ {id:'leer',gruppe:'Essen und Pflege',name:'Bis auf den letzten Krümel',text:'Ein Buffet wird ganz leer gegessen',wert:()=>Z('leer'),ziel:1,lohn:30},
+ {id:'wasch25',gruppe:'Essen und Pflege',name:'Sauberkeitsfan',text:'Lass 25-mal waschen oder baden',wert:()=>Z('waschen'),ziel:25,lohn:40},
+ {id:'streichel50',gruppe:'Essen und Pflege',name:'Schmusekönig',text:'Streichle 50-mal',wert:()=>Z('streicheln'),ziel:50,lohn:40},
+ // Arbeit und Karriere
+ {id:'schicht10',gruppe:'Arbeit und Karriere',name:'Fleißig',text:'Schließe 10 Schichten ab',wert:()=>Z('schichten'),ziel:10,lohn:30},
+ {id:'schicht50',gruppe:'Arbeit und Karriere',name:'Arbeitstier',text:'Schließe 50 Schichten ab',wert:()=>Z('schichten'),ziel:50,lohn:80},
+ {id:'schicht200',gruppe:'Arbeit und Karriere',name:'Unermüdlich',text:'Schließe 200 Schichten ab',wert:()=>Z('schichten'),ziel:200,lohn:200},
+ {id:'rang3',gruppe:'Arbeit und Karriere',name:'Erste Beförderung',text:'Ein Mini wird Fachkraft',wert:()=>maxRang()>=3?1:0,ziel:1,lohn:30},
+ {id:'rang10',gruppe:'Arbeit und Karriere',name:'Profi',text:'Ein Mini wird Profi',wert:()=>maxRang()>=10?1:0,ziel:1,lohn:60},
+ {id:'rang25',gruppe:'Arbeit und Karriere',name:'Chefsessel',text:'Ein Mini übernimmt die Leitung eines Ladens',wert:()=>maxRang()>=25?1:0,ziel:1,lohn:150},
+ {id:'allround',gruppe:'Arbeit und Karriere',name:'Allrounder',text:'Ein Mini hat in allen drei Läden gearbeitet',wert:()=>Math.max(0,...minis.map(m=>Object.keys(ORTE).filter(o=>(m.karriere||{})[o]>0).length)),ziel:3,lohn:40},
+ {id:'team',gruppe:'Arbeit und Karriere',name:'Teamwork',text:'Beste Freunde arbeiten zusammen',wert:()=>Z('team'),ziel:1,lohn:40},
+ {id:'lohn1k',gruppe:'Arbeit und Karriere',name:'Erster Tausender',text:'Verdiene 1.000 Münzen mit Arbeit',wert:()=>Z('muenzen'),ziel:1000,lohn:50},
+ {id:'lohn10k',gruppe:'Arbeit und Karriere',name:'Großverdiener',text:'Verdiene 10.000 Münzen mit Arbeit',wert:()=>Z('muenzen'),ziel:10000,lohn:250},
+ // Minis und Beziehungen
+ {id:'wg',gruppe:'Minis und Beziehungen',name:'WG',text:'4 Minis wohnen hier',wert:()=>minis.length,ziel:4,lohn:40},
+ {id:'voll',gruppe:'Minis und Beziehungen',name:'Volles Haus',text:'10 Minis wohnen hier',wert:()=>minis.length,ziel:10,lohn:150},
+ {id:'freunde',gruppe:'Minis und Beziehungen',name:'Freundschaft',text:'Zwei Minis werden Freunde',wert:()=>maxFreund()>=60?1:0,ziel:1,lohn:25},
+ {id:'beste',gruppe:'Minis und Beziehungen',name:'Beste Freunde',text:'Zwei Minis werden beste Freunde',wert:()=>maxFreund()>=90?1:0,ziel:1,lohn:50},
+ {id:'verliebt',gruppe:'Minis und Beziehungen',name:'Es hat gefunkt',text:'Zwei Minis verlieben sich',wert:()=>Object.values(stand.liebe).some(v=>v>=1)||Z('flirt')?1:0,ziel:1,lohn:50},
+ {id:'paar',gruppe:'Minis und Beziehungen',name:'Ein Paar',text:'Zwei Minis werden ein Paar',wert:()=>Object.values(stand.liebe).some(v=>v===2)||Z('antrag')?1:0,ziel:1,lohn:80},
+ {id:'ewig',gruppe:'Minis und Beziehungen',name:'Unsterblich verliebt',text:'Ein Paar erreicht die höchste Stufe',wert:()=>Object.keys(stand.liebe).some(k=>stand.liebe[k]===2&&(stand.freund[k]||0)>=100)?1:0,ziel:1,lohn:150},
+ {id:'versoehnt',gruppe:'Minis und Beziehungen',name:'Wieder gut',text:'Zwei Minis vertragen sich nach einem Streit',wert:()=>Z('versoehnung'),ziel:1,lohn:20},
+ {id:'frieden',gruppe:'Minis und Beziehungen',name:'Waffenstillstand',text:'Zwei, die sich hassen, schließen Frieden',wert:()=>Z('frieden'),ziel:1,lohn:50},
+ // Einrichten und Spielen
+ {id:'deko1',gruppe:'Einrichten und Spielen',name:'Einrichter',text:'Kaufe den ersten Gegenstand',wert:()=>Z('einrichten'),ziel:1,lohn:15},
+ {id:'deko10',gruppe:'Einrichten und Spielen',name:'Innenarchitekt',text:'Kaufe 10 Gegenstände',wert:()=>Z('einrichten'),ziel:10,lohn:50},
+ {id:'spiel1',gruppe:'Einrichten und Spielen',name:'Spielkind',text:'Ein Mini spielt zum ersten Mal',wert:()=>Z('spielen'),ziel:1,lohn:15},
+ {id:'spielplatz',gruppe:'Einrichten und Spielen',name:'Spielplatz',text:'Stelle 4 verschiedene Spielgeräte auf',wert:()=>new Set(stand.deko.filter(d=>KAT[d.k].spiel).map(d=>d.k)).size,ziel:4,lohn:80},
+ // Fortschritt
+ {id:'stufe5',gruppe:'Fortschritt',name:'Aufsteiger',text:'Erreiche Stufe 5',wert:()=>stand.stufe,ziel:5,lohn:50},
+ {id:'stufe10',gruppe:'Fortschritt',name:'Alter Hase',text:'Erreiche Stufe 10',wert:()=>stand.stufe,ziel:10,lohn:150},
+ {id:'alles',gruppe:'Fortschritt',name:'Großgrundbesitz',text:'Schalte alle Gebiete frei',wert:()=>stand.frei.length,ziel:PARZ.length,lohn:200},
+ {id:'tag3',gruppe:'Fortschritt',name:'Alles im Griff',text:'Schaffe alle drei Tagesaufgaben an einem Tag',wert:()=>Z('tagAlle'),ziel:1,lohn:30},
+ {id:'woche',gruppe:'Fortschritt',name:'Wochenserie',text:'7 Tage in Folge alle Tagesaufgaben',wert:()=>stand.serie.best||0,ziel:7,lohn:100},
+ {id:'monat',gruppe:'Fortschritt',name:'Treue Seele',text:'30 Tage in Folge alle Tagesaufgaben',wert:()=>stand.serie.best||0,ziel:30,lohn:400},
+ // Besondere Momente
+ {id:'schnuppe',gruppe:'Besondere Momente',name:'Wünsch dir was',text:'Sieh eine Sternschnuppe',wert:()=>Z('schnuppe'),ziel:1,lohn:25},
+ {id:'post',gruppe:'Besondere Momente',name:'Post ist da',text:'Nimm ein Päckchen vom Postboten an',wert:()=>Z('post'),ziel:1,lohn:20},
+ {id:'fest',gruppe:'Besondere Momente',name:'Lagerfeuer-Fest',text:'Erlebe ein Fest am Feuer',wert:()=>Z('fest'),ziel:1,lohn:30},
+ {id:'regenbogen',gruppe:'Besondere Momente',name:'Regenbogen',text:'Erlebe einen Regenbogen',wert:()=>Z('regenbogen'),ziel:1,lohn:25},
+ {id:'wetter',gruppe:'Besondere Momente',name:'Wetterfest',text:'Erlebe alle fünf Wetterlagen',wert:()=>Object.keys(stand.gesehen.w).length,ziel:5,lohn:60},
+ {id:'jahr',gruppe:'Besondere Momente',name:'Ein ganzes Jahr',text:'Erlebe alle vier Jahreszeiten',wert:()=>Object.keys(stand.gesehen.j).length,ziel:4,lohn:300}
+];
+let erfolgWarte=0;
+function pruefeErfolge(){
+  stand.gesehen.w[wetterEcht()]=1;stand.gesehen.j[jahreszeitEcht()]=1; // nur echtes Wetter zählt, nicht der Testmodus
+  const neu=ERFOLGE.filter(e=>!stand.erfolge[e.id]&&e.wert()>=e.ziel);if(!neu.length)return;
+  for(const e of neu)stand.erfolge[e.id]=1;
+  const text=neu.length===1?'Erfolg: „'+neu[0].name+'“! Hol dir '+neu[0].lohn+' Münzen unter „Erfolge“ ab.':neu.length+' Erfolge geschafft! Die Münzen warten unter „Erfolge“.';
+  const jetzt=performance.now(),w=Math.max(0,erfolgWarte-jetzt);erfolgWarte=jetzt+w+3000;setTimeout(()=>sag(text),w+1200);
+  hud();sichern();
+}
+function erfolgBlatt(){
+  const bereit=ERFOLGE.filter(e=>stand.erfolge[e.id]===1),geschafft=ERFOLGE.filter(e=>stand.erfolge[e.id]).length,posten=[];
+  if(bereit.length>1){const summe=bereit.reduce((a,e)=>a+e.lohn,0);posten.push({titel:'Alle abholen',text:bereit.length+' Erfolge · '+summe+' Münzen',knopf:'Abholen',fn:()=>{for(const e of bereit)stand.erfolge[e.id]=2;auszahlen(summe,bereit.length*3);sag('Abgeholt: +'+summe+' Münzen.');erfolgBlatt()}})}
+  let gruppe='';
+  for(const e of ERFOLGE){
+    if(e.gruppe!==gruppe){gruppe=e.gruppe;const l=ERFOLGE.filter(x=>x.gruppe===gruppe);posten.push({kopf:true,titel:gruppe+' · '+l.filter(x=>stand.erfolge[x.id]).length+'/'+l.length})}
+    const s=stand.erfolge[e.id],w=Math.min(e.wert(),e.ziel);
+    if(s===1)posten.push({titel:e.name,text:'Geschafft! '+e.text+' · '+e.lohn+' Münzen',knopf:'Abholen',fn:()=>{stand.erfolge[e.id]=2;auszahlen(e.lohn,3);erfolgBlatt()}});
+    else if(s===2)posten.push({titel:e.name,text:e.text+' · abgeholt',erledigt:true});
+    else posten.push({titel:e.name,text:e.text+(e.ziel>1?' · '+w+' von '+e.ziel:'')+' · '+e.lohn+' Münzen'});
+  }
+  blatt('Erfolge',geschafft+' von '+ERFOLGE.length+' geschafft. Für jeden Erfolg gibt es Münzen, die du hier selbst abholst.',posten);
+}
+$('aErfolg').addEventListener('click',erfolgBlatt);
+setInterval(pruefeErfolge,3000);setTimeout(pruefeErfolge,1500);
 const aufgabeLohn=a=>a.lohn||AUFGABEN.find(x=>x.typ===a.typ).lohn(a.ziel);
 function neueAufgaben(){ // drei Aufgaben, für denselben Tag immer dieselben
+  if(stand.tag){ // was gestern nicht abgeholt wurde, bleibt abholbar
+    for(const a of stand.tag.aufgaben)if(a.fertig&&a.abgeholt===false)stand.offen.push({titel:AUFGABEN.find(x=>x.typ===a.typ).text(a.ziel),lohn:aufgabeLohn(a),ep:8});
+    if(stand.tag.bonus&&stand.tag.bonusAbgeholt===false)stand.offen.push({titel:stand.tag.bonusWoche?'Wochenbonus':'Bonus für alle drei',lohn:stand.tag.bonusBetrag,ep:stand.tag.bonusWoche?60:20});
+  }
   const d=new Date(),basis=d.getFullYear()*372+d.getMonth()*31+d.getDate(),pool=AUFGABEN.filter(a=>!a.wenn||a.wenn()),l=[];
   for(let i=0;l.length<3&&i<60;i++){const a=pool[Math.floor(zufall01(basis*17+i*101)*pool.length)%pool.length];
     if(!l.some(x=>x.typ===a.typ)&&!(a.typ.startsWith('ort_')&&l.some(x=>x.typ.startsWith('ort_')))){const ziel=a.n();l.push({typ:a.typ,ziel,ist:0,fertig:false,lohn:a.lohn(ziel)})}}
@@ -894,27 +1006,49 @@ function neueAufgaben(){ // drei Aufgaben, für denselben Tag immer dieselben
   if(stand.serie.letzter!==gestern()&&stand.serie.letzter!==heute())stand.serie.tage=0; // Serie gerissen
 }
 function zaehle(typ,n){
+  stand.zahl[typ]=(stand.zahl[typ]||0)+(n||1); // Lebenszähler für Erfolge
   if(!stand.tag||stand.tag.datum!==heute())neueAufgaben();
   let warte=2600;
   for(const a of stand.tag.aufgaben)if(a.typ===typ&&!a.fertig){
     a.ist=Math.min(a.ziel,a.ist+(n||1));
-    if(a.ist>=a.ziel){a.fertig=true;const lohn=aufgabeLohn(a);stand.geld+=lohn;ep(8);setTimeout(()=>sag('Tagesaufgabe geschafft: +'+lohn+' Münzen.'),warte);warte+=2600}
+    if(a.ist>=a.ziel){a.fertig=true;a.abgeholt=false;stand.zahl.tagAufgabe=(stand.zahl.tagAufgabe||0)+1;const lohn=aufgabeLohn(a);
+      setTimeout(()=>sag('Tagesaufgabe geschafft! Tippe oben auf „Tag“ und hol dir '+lohn+' Münzen ab.'),warte);warte+=2600}
   }
   if(!stand.tag.bonus&&stand.tag.aufgaben.every(a=>a.fertig)){
     stand.tag.bonus=true;stand.serie.tage=(stand.serie.letzter===gestern()?stand.serie.tage:0)+1;stand.serie.letzter=heute();stand.serie.best=Math.max(stand.serie.best||0,stand.serie.tage);
-    const woche=stand.serie.tage%7===0,b=DREIERBONUS+(woche?WOCHENBONUS:0);stand.geld+=b;ep(woche?60:20);
-    setTimeout(()=>sag(woche?'Sieben Tage in Folge! Wochenbonus: +'+b+' Münzen.':'Alle drei Tagesaufgaben geschafft! Bonus +'+b+' Münzen. Serie: '+stand.serie.tage+(stand.serie.tage===1?' Tag.':' Tage.')),warte);
+    const woche=stand.serie.tage%7===0,b=DREIERBONUS+(woche?WOCHENBONUS:0);
+    stand.tag.bonusBetrag=b;stand.tag.bonusWoche=woche;stand.tag.bonusAbgeholt=false;stand.zahl.tagAlle=(stand.zahl.tagAlle||0)+1;
+    setTimeout(()=>sag(woche?'Sieben Tage in Folge! '+b+' Münzen Wochenbonus warten unter „Tag“.':'Alle drei Tagesaufgaben geschafft! '+b+' Münzen Bonus warten unter „Tag“. Serie: '+stand.serie.tage+(stand.serie.tage===1?' Tag.':' Tage.')),warte);
   }
-  hud();
+  hud();pruefeErfolge();
+}
+// Münzen gutschreiben, mit kleinem „+X“, das aus dem Münzstand aufsteigt
+function auszahlen(lohn,epN){
+  stand.geld+=lohn;if(epN)ep(epN);hud();sichern();
+  const r=$('geld').getBoundingClientRect(),f=document.createElement('div');f.className='muenzflug';f.textContent='+'+lohn;
+  f.style.left=Math.round(r.left)+'px';f.style.top=Math.round(r.bottom+4)+'px';document.body.append(f);setTimeout(()=>f.remove(),1500);
+}
+function tagAbholbar(){ // alles, was gerade abgeholt werden kann
+  const l=stand.offen.map(o=>({titel:o.titel,lohn:o.lohn,ep:o.ep,von:'gestern',weg:()=>{stand.offen=stand.offen.filter(x=>x!==o)}}));
+  if(stand.tag){for(const a of stand.tag.aufgaben)if(a.fertig&&a.abgeholt===false)l.push({titel:AUFGABEN.find(x=>x.typ===a.typ).text(a.ziel),lohn:aufgabeLohn(a),ep:8,weg:()=>{a.abgeholt=true}});
+    if(stand.tag.bonus&&stand.tag.bonusAbgeholt===false)l.push({titel:stand.tag.bonusWoche?'Wochenbonus':'Bonus für alle drei',lohn:stand.tag.bonusBetrag,ep:stand.tag.bonusWoche?60:20,weg:()=>{stand.tag.bonusAbgeholt=true}})}
+  return l;
+}
+function tagBlatt(){
+  const s=stand.serie,lebt=s.letzter===heute()||s.letzter===gestern(),tage=lebt?s.tage:0,bis=7-tage%7,ab=tagAbholbar(),posten=[];
+  if(ab.length>1){const summe=ab.reduce((a,x)=>a+x.lohn,0);posten.push({titel:'Alles abholen',text:ab.length+' Belohnungen · '+summe+' Münzen',knopf:'Abholen',fn:()=>{let e=0;for(const x of ab){x.weg();e+=x.ep}auszahlen(summe,e);sag('Abgeholt: +'+summe+' Münzen.');tagBlatt()}})}
+  for(const o of ab.filter(x=>x.von))posten.push({titel:o.titel,text:'Von gestern, noch nicht abgeholt · '+o.lohn+' Münzen',knopf:'Abholen',fn:()=>{o.weg();auszahlen(o.lohn,o.ep);tagBlatt()}});
+  for(const a of stand.tag.aufgaben){const titel=AUFGABEN.find(x=>x.typ===a.typ).text(a.ziel),lohn=aufgabeLohn(a);
+    if(a.fertig&&a.abgeholt===false)posten.push({titel,text:'Geschafft! '+lohn+' Münzen warten',knopf:'Abholen',fn:()=>{a.abgeholt=true;auszahlen(lohn,8);tagBlatt()}});
+    else posten.push({titel,text:a.fertig?'Abgeholt · +'+lohn+' Münzen':a.ist+' von '+a.ziel+' · Belohnung '+lohn+' Münzen',erledigt:a.fertig})}
+  if(stand.tag.bonus&&stand.tag.bonusAbgeholt===false)posten.push({titel:stand.tag.bonusWoche?'Wochenbonus':'Bonus für alle drei',text:'Geschafft! '+stand.tag.bonusBetrag+' Münzen warten',knopf:'Abholen',fn:()=>{stand.tag.bonusAbgeholt=true;auszahlen(stand.tag.bonusBetrag,stand.tag.bonusWoche?60:20);tagBlatt()}});
+  else posten.push({titel:'Bonus für alle drei',text:stand.tag.bonus?'Abgeholt':DREIERBONUS+' Münzen, am 7. Tag in Folge zusätzlich '+WOCHENBONUS,erledigt:stand.tag.bonus});
+  blatt('Tagesaufgaben',(stand.tag.bonus?'Für heute ist alles geschafft. Morgen gibt es drei neue. ':'Geschaffte Aufgaben holst du hier ab, je schwerer, desto mehr Münzen. ')
+    +'Serie: '+tage+(tage===1?' Tag':' Tage')+' in Folge'+(s.best>tage?' (Rekord '+s.best+')':'')+'. Noch '+bis+(bis===1?' Tag':' Tage')+' bis zum Wochenbonus.',posten);
 }
 if(!stand.tag||stand.tag.datum!==heute())neueAufgaben();
 setInterval(()=>{if(stand.tag.datum!==heute()){neueAufgaben();hud();sag('Ein neuer Tag: drei neue Tagesaufgaben.')}},30000);
-$('aTag').addEventListener('click',()=>{
-  const s=stand.serie,lebt=s.letzter===heute()||s.letzter===gestern(),tage=lebt?s.tage:0,bis=7-tage%7;
-  blatt('Tagesaufgaben',(stand.tag.bonus?'Für heute ist alles geschafft. Morgen gibt es drei neue. ':'Jede Aufgabe bringt Münzen, je schwerer, desto mehr. Alle drei zusammen bringen '+DREIERBONUS+' Münzen Bonus. ')
-    +'Serie: '+tage+(tage===1?' Tag':' Tage')+' in Folge'+(s.best>tage?' (Rekord '+s.best+')':'')+'. Noch '+bis+(bis===1?' Tag':' Tage')+' bis zum Wochenbonus von '+WOCHENBONUS+' Münzen.',
-    stand.tag.aufgaben.map(a=>({titel:AUFGABEN.find(x=>x.typ===a.typ).text(a.ziel),text:a.fertig?'Geschafft · +'+aufgabeLohn(a)+' Münzen':a.ist+' von '+a.ziel+' · Belohnung '+aufgabeLohn(a)+' Münzen',erledigt:a.fertig})));
-});
+$('aTag').addEventListener('click',tagBlatt);
 // ---------- Seltene Ereignisse ----------
 let fest=null,besuch=null,schnuppe=null,regenbogenBis=0,stromausBis=0,ereignisT=40,letztesWetter=null;
 const FESTPLATZ=[[12,11],[13,11],[14,11],[12,8],[13,8],[14,8],[11,10],[11,11],[15,11],[15,9]];
@@ -926,18 +1060,18 @@ function starteEreignis(name){
   if(!fest&&h>=17&&h<23.5&&wach.length>=2&&stand.festTag!==heute())l.push('fest','fest','fest');
   if(wach.length)l.push('fund');
   const e=name||l[zufall(0,l.length-1)];
-  if(e==='schnuppe'){schnuppe={t0:jetzt};for(const m of wach)m.n.l=grenz(m.n.l+6,0,100);ep(5);sag('Eine Sternschnuppe! Alle wünschen sich etwas.')}
+  if(e==='schnuppe'){schnuppe={t0:jetzt};zaehle('schnuppe');for(const m of wach)m.n.l=grenz(m.n.l+6,0,100);ep(5);sag('Eine Sternschnuppe! Alle wünschen sich etwas.')}
   else if(e==='strom'){stromausBis=jetzt+120000;sag('Stromausfall in der Stadt! Zwei Minuten lang bleibt dort alles dunkel.')}
   else if(e==='besuch'){besuch={skin:6+zufall(0,2),x:8*T,y:8*T,bis:jetzt+90000,geschenk:15+stand.stufe*10+zufall(0,20)};sag('Der Postbote steht vor dem Wohnwagen. Tippe ihn an!')}
   else if(e==='fund'&&wach.length){const m=wach[zufall(0,wach.length-1)],g=4+zufall(1,6)*stand.stufe;stand.geld+=g;m.herz=1.2;hud();sag(m.name+' hat '+g+' Münzen im Gras gefunden!')}
-  else if(e==='fest'){fest={bis:jetzt+50000};stand.festTag=heute();
+  else if(e==='fest'){fest={bis:jetzt+50000};stand.festTag=heute();zaehle('fest');
     for(const m of wach)m.wachBis=jetzt+60000; // wer frei ist, sucht sich in schrittMini einen Platz am Feuer
     sag('Lagerfeuer-Fest! Alle treffen sich am Feuer.')}
   return e;
 }
 function ereignisse(dt){
   const jetzt=performance.now(),wt=wetter();
-  if(letztesWetter==='regen'&&wt==='sonne'&&himmel(stunde())[4]<.5){regenbogenBis=jetzt+120000;for(const m of minis)if(!m.drin&&!m.fort)m.n.l=grenz(m.n.l+5,0,100);sag('Der Regen ist vorbei. Ein Regenbogen!')}
+  if(letztesWetter==='regen'&&wt==='sonne'&&himmel(stunde())[4]<.5){regenbogenBis=jetzt+120000;zaehle('regenbogen');for(const m of minis)if(!m.drin&&!m.fort)m.n.l=grenz(m.n.l+5,0,100);sag('Der Regen ist vorbei. Ein Regenbogen!')}
   letztesWetter=wt;
   if(besuch&&jetzt>besuch.bis){besuch=null;sag('Der Postbote ist weitergefahren.')}
   if(fest&&jetzt>fest.bis){const da=minis.filter(m=>m.fest);fest=null;
@@ -1077,7 +1211,7 @@ $('bauA').addEventListener('click',()=>{
   if(bau.modus==='wahl'){katalog();return}
   bau.grund=dekoPasst(bau.k,bau.x,bau.y);if(bau.grund){bauLeiste();return}
   const e=KAT[bau.k];
-  if(bau.d){const d=bau.d;d.x=bau.x;d.y=bau.y;d.weg=false;sag(e.name+' steht jetzt am neuen Platz.')}
+  if(bau.d){const d=bau.d;d.x=bau.x;d.y=bau.y;d.weg=false;zaehle('verschieben');sag(e.name+' steht jetzt am neuen Platz.')}
   else{if(stand.geld<e.preis){bauLeiste();return}
     stand.geld-=e.preis;stand.dekoNr=(stand.dekoNr||stand.deko.length)+1;stand.deko.push({id:stand.dekoNr,k:bau.k,x:bau.x,y:bau.y});
     sag(e.name+' steht.'+(e.spiel?' Die Minis spielen damit, wenn sie Lust haben. Oder tippe es an, dann spielt dein Mini.':e.licht?' Nachts leuchtet es.':e.schoen?' Das macht es gemütlicher.':''));zaehle('einrichten')}
@@ -1116,7 +1250,7 @@ function spielEnde(d){for(const m of minis){if(m.akt&&m.akt.typ==='spiel'&&m.akt
 function zusammen(a,b,plus,wobei){
   const k=paar(a,b),vor=freundWert(a,b);if(vor<=-45||stand.liebe[k]===2&&vor>=100)return;
   const neu=Math.min(100,vor+plus);stand.freund[k]=neu;
-  if(stand.streit[k]&&Math.random()<.6){delete stand.streit[k];sag(a.name+' und '+b.name+' haben sich '+wobei+' wieder vertragen.');ep(8)}
+  if(stand.streit[k]&&Math.random()<.6){delete stand.streit[k];zaehle('versoehnung');sag(a.name+' und '+b.name+' haben sich '+wobei+' wieder vertragen.');ep(8)}
   else if(neu>=30&&freundStufe(neu)!==freundStufe(vor))sag(a.name+' und '+b.name+' sind jetzt '+freundStufe(neu)+'.');
 }
 function gemeinsamGegessen(m,f){
@@ -1250,7 +1384,7 @@ function schrittMini(m,dt,h){
         sichern();return}
       if(a.typ==='reden'){N.l=grenz(N.l+(a.laune===undefined?6:a.laune),0,100);m.wart=2+Math.random()*3;return}
       if(a.typ==='essen'){const e=essenVon(a.f);
-        if(e.portionen){if(stand.futter.includes(a.f)){a.f.rest--;gemeinsamGegessen(m,a.f);if(a.f.rest<=0){stand.futter=stand.futter.filter(f=>f!==a.f);sperreNeu();sag(e.name.replace(' für alle','')+' ist leer gegessen.')}}}
+        if(e.portionen){if(stand.futter.includes(a.f)){a.f.rest--;gemeinsamGegessen(m,a.f);if(a.f.rest<=0){stand.futter=stand.futter.filter(f=>f!==a.f);sperreNeu();zaehle('leer');sag(e.name.replace(' für alle','')+' ist leer gegessen.')}}}
         else stand.futter=stand.futter.filter(f=>f!==a.f);
         N.h=grenz(N.h+e.satt,0,100);N.l=grenz(N.l+e.laune+(hat(m,'schleckermaul')?8:0),0,100);ep(5,e.portionen?'':m.name+' ist satt');}
       else if(a.typ==='spiel'){spielSchluss(m,a);sichern();return}
@@ -1622,7 +1756,7 @@ function gespraeche(){
     const fr=neu>=60,zeilen=erst?vorstellung(a,b):form==='streit'?streitZeilen(a,b):form==='hass'?hassZeilen(a,b):form==='frieden'?friedenZeilen(a,b):form==='versoehnung'?versoehnZeilen(a,b):form==='flirt'?flirtZeilen(a,b):form==='antrag'?antragZeilen(a,b):form==='paar'?paarZeilen(a,b):plauderei(a,b,fr),dauer=zeilen.length*ZEILE;
     const laune={streit:-10,hass:-12,frieden:10,versoehnung:12,flirt:14,antrag:25,paar:14}[form]||(fr?10:6),herzen=form==='flirt'||form==='antrag'||form==='paar';
     a.akt={typ:'reden',t:dauer,dauer,mit:b.id,freund:fr,zeilen,ich:0,laune,herzen};b.akt={typ:'reden',t:dauer,dauer,mit:a.id,freund:fr,zeilen,ich:1,laune,herzen};
-    zaehle('gespraech');
+    zaehle('gespraech');if(['versoehnung','frieden','flirt','antrag'].includes(form))zaehle(form);
     let text=erst?a.name+' und '+b.name+' lernen sich kennen.':form==='streit'?a.name+' und '+b.name+' streiten sich.':form==='hass'?a.name+' und '+b.name+' beschimpfen sich.':'';
     if(form==='versoehnung'){ep(10);text=a.name+' und '+b.name+' vertragen sich wieder.'}
     if(form==='frieden'){ep(15);text=a.name+' und '+b.name+' schließen Waffenstillstand.'}
