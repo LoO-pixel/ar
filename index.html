@@ -16,10 +16,12 @@ html{-webkit-text-size-adjust:100%}
 body{margin:0;font-size:14px;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
 </style>
 <style>
+/* Ziffern 0-9 aus „Jersey 10“ (SIL OFL), eingebettet: in Pixelify Sans sieht die 5 wie ein S aus */
+@font-face{font-family:"Ziffern";src:url(data:font/woff2;base64,d09GMgABAAAAAAMIAA0AAAAABywAAAK4AAEAQgAAAAAAAAAAAAAAAAAAAAAAAAAAGyAcKgZgADQRCAqFDIQOATYCJAMqCxgABCAFg3oHIBuxBRHVk/UAPxNsWwnbqBeMtfbBDCzpM/KOHDzV2ufrnt6DXrgQkQLcSCBQRzKWcFRcKh7Lhz3rDy7kgDcAFuaGpMDi1YDkXu+2I5XIPXBO3eyVHk128Yss8xFJByv6wS/wg1YKVNCRbtuSIuoTZHqd2sb476wI4IxgFLJ67abNtGEAVQUACOBMYgrKma44faDzLEOYIPtNx8s1EghXwnrghD6NfJwnxxGBAvI/x2/gCXNYakf+AzspPYAA6Hb9CmNQQIEADCAgxd8YA1hbgKV3kuZUgn2NfQ8EqSo6AEgBGAT0AT4AHwEAAwAUQRB03TOgmbWMGdFSDLIBxQCzAZakkpOak4mfck2T1DxxSXvZceEBYKUjp5CU036McEokZp8Zl/1RquaS+XR4yMmwWWXTx1psZ47wSayU+C5fKqsKdQMeuvOAirJk31HD2zw6mJHPgpwX7pbljI3drp2ansVnka/1r3F7Sb2ckKmIEeghcduMmFOHNqR1U2AYtYrUsnLl6tM3erXi1xhnDLjCtNSzOENnZ2wFuqfXEU1tOttzJaYnhr2sc7sbdgg960mgjKB5UA13gXhoCFhJs3Gj63AMF9r49PjLAAggrJyx4W+zY8W3to6kF6C2YcRvoHlv+/Bq9P+83bcjQAsKgMA3Sv9ZwDvEs1fMdt0OmoPMABvH1JqT+kpAgJTNJLOvONTKTgJi7cBjmG6hH4/dSsErd2AR79zGOHF3wmaZ8Y4Wxoh5blFW/yYOIwRJkGR4Rj48ygDR9L8av3ltysR3EWYdRmXTAhEhVu2E58MYo87h3DLnWzdoYt+bWD4riyybCYlM+2id3CN/DKJw98MusxuREwRxer6cV1NPpI9gy6DIo2Dwb9bkuCwgFwvPmw7sN0GXwy8uMPxh08YOKv46q3rjOeTNwkMRrLojAQA=) format("woff2");unicode-range:U+0030-0039;size-adjust:116%;font-display:block}
 /* Layout: Vollbild-Canvas als Terrarium, HUD oben und Hinweis unten als Holztafeln */
 :root{
   --nacht:#1b2433; --holz:#5b3a21; --papier:#fff1d6; --tinte:#3b2414; --gold:#e0a21b; --gras:#4a9a55; --rot:#b8442f; --satt:#d98a1e; --sauber:#3d8fb8; --wach:#4a9a55; --froh:#c4517a;
-  --pixel:"Pixelify Sans","Courier New",monospace;
+  --pixel:"Ziffern","Pixelify Sans","Courier New",monospace;
   color-scheme:dark;
 }
 html,body{height:100%}
@@ -37,7 +39,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none;image-ren
 .wert small{font-size:12px;font-weight:400;letter-spacing:.04em;text-transform:uppercase;opacity:.75}
 button{font:inherit;color:inherit;cursor:pointer}
 #uhr:focus-visible,.knopf:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
-#hinweis{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 46px);margin:0 auto;max-width:380px;display:block;white-space:normal;text-align:center;font-size:12px;font-weight:400;line-height:1.3;pointer-events:none;transition:opacity .4s}
+#hinweis{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 60px);margin:0 auto;max-width:380px;display:block;white-space:normal;text-align:center;font-size:12px;font-weight:400;line-height:1.3;pointer-events:none;transition:opacity .4s}
 #hinweis.aus{opacity:0}
 #bauLeiste{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 6px);margin:0 auto;max-width:420px;padding:2px 4px}
 #bauLeiste p{margin:0;font-size:13px;line-height:1.3}
@@ -73,6 +75,16 @@ body.bauen #hinweis{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
 .muenzflug{position:fixed;z-index:30;font:600 15px var(--pixel);color:var(--gold);pointer-events:none;white-space:nowrap;
   text-shadow:1px 0 0 var(--tinte),-1px 0 0 var(--tinte),0 1px 0 var(--tinte),0 -1px 0 var(--tinte);animation:muenzflug 1.4s ease-out forwards}
 @keyframes muenzflug{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-30px)}}
+#plan h3{margin:14px 0 0;padding-top:8px;border-top:2px solid var(--holz);font-size:17px;font-weight:600}
+#plan .klein{font-size:12px;line-height:1.3;margin-top:2px;opacity:.85}
+.pz{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+.pz input,.pz select{font:600 16px var(--pixel);color:var(--tinte);background:#fff8e6;border:2px solid var(--holz);border-radius:0;padding:2px 4px;min-height:34px;min-width:0}
+.pz input[type=time]{flex:none;width:96px}
+.pz select{flex:1 1 110px;max-width:100%}
+.pz .x{flex:none;width:34px;height:34px;padding:0;border:2px solid var(--holz);background:#f3dcc0;color:var(--rot);font:600 18px var(--pixel)}
+.pz .fehlt,.pz .info{flex-basis:100%;font-size:12px;line-height:1.3}
+.pz label{font-size:14px}
+#plan .plus{margin-top:8px;font-size:14px;padding:2px 8px;flex:none}
 #blatt h3.gruppe{margin:16px 0 0;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.7}
 #aTag.fertig{filter:brightness(1.08) saturate(1.3)}
 .posten.ohne{grid-template-columns:1fr}
@@ -81,17 +93,19 @@ body.bauen #hinweis{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
 #klapp{background:none;border:0;padding:0 2px;font-size:13px;font-weight:600;white-space:nowrap}
 #klapp.knapp{color:var(--rot)}
 #klapp:focus-visible{outline:3px solid var(--gold)}
-#blatt{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,14,22,.55)}
-#blatt .tafel{width:min(340px,100%);max-height:86%;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:6px}
-#blatt h2{margin:0;font-size:24px;font-weight:600}
-#blatt p{margin:0;font-size:14px;line-height:1.35}
+#blatt,#plan{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,14,22,.55)}
+#blatt .tafel,#plan .tafel{width:min(340px,100%);max-height:86%;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:6px}
+#blatt h2,#plan h2{margin:0;font-size:24px;font-weight:600}
+#blatt p,#plan p{margin:0;font-size:14px;line-height:1.35}
 .posten{margin-top:8px;display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;border-top:2px solid var(--holz);padding-top:8px}
 .posten b{font-size:16px}
 .posten span{font-size:13px;line-height:1.3;grid-column:1}
 .posten .knopf{grid-column:2;grid-row:1 / span 2;flex:none;min-width:84px;font-size:14px}
 .posten .fehlt{font-weight:600}
 #aktionen{position:fixed;left:0;right:0;bottom:0;padding:0 16px calc(env(safe-area-inset-bottom,0px) + 6px);display:flex;gap:4px;justify-content:center}
-#aktionen .knopf{flex:1 1 0;max-width:104px;min-width:0;font-size:12px;padding:1px 0;border-width:7px;border-image-width:7px}
+#aktionen .knopf{flex:none;width:48px;height:48px;padding:0;border-width:7px;border-image-width:7px;display:grid;place-items:center}
+#aktionen .knopf i{display:block;width:32px;height:32px;background-size:32px 32px;background-repeat:no-repeat;image-rendering:pixelated}
+#aktionen{gap:6px}
 #aktionen .knopf.aktiv{filter:brightness(1.35)}
 #dialog{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,14,22,.55)}
 #dialog .tafel{width:min(320px,100%);display:flex;flex-direction:column;gap:10px;padding:6px}
@@ -107,9 +121,9 @@ body.bauen #hinweis{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
 #status{left:max(16px,env(safe-area-inset-left,0px))}
 /* Querformat auf dem Handy: Knöpfe als Spalte rechts, damit unten nichts die Welt verdeckt */
 @media (orientation:landscape) and (max-height:520px){
-  #aktionen{left:auto;top:0;bottom:0;flex-direction:column;justify-content:center;padding:36px max(16px,env(safe-area-inset-right,0px)) 0 0}
-  #aktionen .knopf{flex:none;width:84px;max-width:none}
-  #hinweis{bottom:calc(env(safe-area-inset-bottom,0px) + 6px);right:120px;left:max(16px,env(safe-area-inset-left,0px));max-width:420px}
+  #aktionen{left:auto;top:auto;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 6px);padding:0;display:grid;grid-template-columns:repeat(2,48px)}
+  #aktionen .knopf{flex:none;width:48px;height:48px;max-width:none}
+  #hinweis{bottom:calc(env(safe-area-inset-bottom,0px) + 6px);right:136px;left:max(16px,env(safe-area-inset-left,0px));max-width:420px}
   #bogen{grid-template-columns:1fr;max-height:calc(100vh - 110px);overflow-y:auto}
   #bauLeiste{left:auto;width:330px}
   #aKlinik{right:calc(max(16px,env(safe-area-inset-right,0px)) + 124px);top:calc(env(safe-area-inset-top,0px) + 74px)}
@@ -146,15 +160,24 @@ body.bauen #hinweis{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
 <button id="aKlinik" class="tafel chip" hidden><small>Klinik</small><span id="klinikZahl">1</span></button>
 <div id="hinweis" class="tafel chip">Tippe auf den Boden, dann läuft dein Mini dorthin. Wische, um dich umzusehen, und zoome mit zwei Fingern. Tippe einen Mini an, um ihn auszuwählen.</div>
 <div id="aktionen">
-  <button class="knopf" id="aFutter">Essen</button>
-  <button class="knopf" id="aWasch">Waschen</button>
-  <button class="knopf" id="aSchlaf">Schlafen</button>
-  <button class="knopf" id="aArbeit">Arbeit</button>
-  <button class="knopf" id="aDeko">Einrichten</button>
+  <button class="knopf" id="aFutter" aria-label="Essen" title="Essen"><i></i></button>
+  <button class="knopf" id="aWasch" aria-label="Waschen" title="Waschen"><i></i></button>
+  <button class="knopf" id="aSchlaf" aria-label="Schlafen" title="Schlafen"><i></i></button>
+  <button class="knopf" id="aArbeit" aria-label="Arbeit" title="Arbeit"><i></i></button>
+  <button class="knopf" id="aPlan" aria-label="Tagesplan" title="Tagesplan"><i></i></button>
+  <button class="knopf" id="aDeko" aria-label="Einrichten" title="Einrichten"><i></i></button>
 </div>
 <div id="bauLeiste" class="tafel" hidden>
   <p id="bauText"></p>
   <div class="reihe"><button class="knopf" id="bauA">Kaufen</button><button class="knopf" id="bauB">Fertig</button></div>
+</div>
+<div id="plan" hidden>
+  <div class="tafel" role="dialog" aria-labelledby="pTitel">
+    <h2 id="pTitel">Tagesplan</h2>
+    <p>Lege fest, wann es Essen gibt, wann wer schläft und wer wann arbeitet. Der Plan gilt jeden Tag.</p>
+    <div id="pInhalt"></div>
+    <div class="reihe"><button class="knopf" id="pZu">Fertig</button></div>
+  </div>
 </div>
 <div id="blatt" hidden>
   <div class="tafel" role="dialog" aria-labelledby="bTitel">
@@ -324,6 +347,8 @@ if(!stand.zahl){stand.zahl={schichten:stand.minis.reduce((s,m)=>s+Object.values(
 if(!stand.erfolge)stand.erfolge={}; // id -> 1 geschafft, 2 abgeholt
 if(!stand.gesehen)stand.gesehen={w:{},j:{}};
 if(!Array.isArray(stand.offen))stand.offen=[]; // nicht abgeholte Belohnungen vergangener Tage
+// Tagesplan: Mahlzeiten für alle, je Mini feste Schlafenszeit und Termine; planLauf merkt sich, was heute schon lief
+if(!stand.plan)stand.plan={essen:[],minis:{}};if(!stand.planLauf)stand.planLauf={};if(!stand.planNr)stand.planNr=0;
 // Einrichtung: beim ersten Start mit der Grundausstattung der Welt (Lampen, Bänke, Stühle …)
 if(!Array.isArray(stand.deko)){stand.deko=D.deko0.map((d,i)=>({id:i+1,k:d.k,x:d.x,y:d.y}));stand.dekoNr=stand.deko.length}
 stand.deko=stand.deko.filter(d=>KAT[d.k]&&D.kgeo[d.k]);for(const d of stand.deko)delete d.weg;
@@ -424,7 +449,7 @@ function ankunft(m){
   else if(p.typ==='dusche'){tuerAuf(m.heim);m.drin=true;m.grund='dusche';m.akt={typ:'dusche',t:4}}
   else if(p.typ==='schlaf'){tuerAuf(m.heim);m.drin=true;m.grund=p.nacht?'nacht':'schlaf'}
   else if(p.typ==='fest'){m.fest=true}
-  else if(p.typ==='arbeit'){tuerAuf(ORTE[p.j.ort].tuer);m.job={id:p.j.id,ende:Date.now()+p.j.dauer*60000,team:!!p.team};m.fort=true;sag(m.name+' arbeitet jetzt '+ORTE[p.j.ort].im+': '+p.j.name+'.');sichern()}
+  else if(p.typ==='arbeit'){const min=p.min||p.j.dauer;tuerAuf(ORTE[p.j.ort].tuer);m.job={id:p.j.id,ende:Date.now()+min*60000,team:!!p.team,min};m.fort=true;sag(m.name+' arbeitet jetzt '+ORTE[p.j.ort].im+': '+p.j.name+'.');sichern()}
 }
 // ---------- Tageszeit ----------
 const MODI=[null,6.4,13,19.2,23.5];let modus=0;
@@ -563,8 +588,11 @@ function launeBonus(m){
     else if(v<=-45)b-=wg?14:7;else if(stand.streit[k])b-=wg?10:5;else if(wg&&v>=60)b+=4}
   return b;
 }
-const raten=m=>({h:hat(m,'schleckermaul')?1.35:1,s:hat(m,'schmutzfink')?1.5:1,e:hat(m,'faulpelz')?.75:1});
-const bettzeit=(m,h)=>hat(m,'nachteule')?(h>=2&&h<8):hat(m,'morgenmuffel')?h<7.5:h<6;
+const raten=m=>{const a=m.fort&&m.job?.4:1;return {h:(hat(m,'schleckermaul')?1.35:1)*a,s:(hat(m,'schmutzfink')?1.5:1)*a,e:(hat(m,'faulpelz')?.75:1)*a}}; // bei der Arbeit gibt es Pausen
+const zeitZahl=s=>{const [a,b]=s.split(':').map(Number);return a+b/60};
+const planSchlaf=m=>{const p=stand.plan.minis[m.id];return p&&p.schlaf?p.schlaf:null};
+const bettzeit=(m,h)=>{const s=planSchlaf(m);if(s){const v=zeitZahl(s.von),b=zeitZahl(s.bis);return v<b?(h>=v&&h<b):(h>=v||h<b)}
+  return hat(m,'nachteule')?(h>=2&&h<8):hat(m,'morgenmuffel')?h<7.5:h<6};
 // ---------- Bedürfnisse ----------
 // Änderung pro Stunde: Hunger -8, Sauberkeit -4, Energie -6 (wach) / +40 (schlafend)
 function beduerfnisse(N,std,schlaeft,boden,bonus,f){
@@ -686,6 +714,21 @@ $('klapp').addEventListener('click',()=>{offen=!offen;klappe();try{localStorage.
 function blaettern(d){const i=minis.indexOf(sel());waehle(minis[(i+d+minis.length)%minis.length],true)}
 $('vor').addEventListener('click',()=>blaettern(-1));$('nach').addEventListener('click',()=>blaettern(1));
 
+// ---------- Symbole der Knopfleiste: 16x16-Pixelraster, Umriss wird ergänzt ----------
+const SYMBOLE={"essen":["................",".........k......","........kK.gg...",".........KgGG...","....rrr..Krr....","...rhrrrrrrrr...","..rhhrrrrrrrrR..","..rhrrrrrrrrrR..","..rrrrrrrrrrrR..","..rrrrrrrrrrrR..","..rrrrrrrrrrRR..","...rrrrrrrrRR...","...RrrrrrrRRR...","....RRrrRRRR....",".....RR..RR.....","................"],"waschen":[".......b........",".......b........","......bbb.......","......bbb.....c.",".....bwbbb...c.c",".....bwbbb....c.","....bwbbbbb.....","....bwbbbbb.....","...bbbbbbbbb....","...bbbbbbbbB..c.","...bbbbbbbbB.c.c","...bbbbbbbBB..c.","....bbbbbBBB....",".....BBBBBB.....","................","................"],"schlafen":["................",".....yyyy.......","...yyyyy....ccc.","..yyyy........c.","..yyy........c..",".yyyy.......ccc.",".yyy............",".yyy.....cc.....",".yyyy.....c.....",".yyyy....cc.....","..yyyy.......Y..","..yyyyy....YY...","...yyyyyyyyY....","....YyyyyYY.....","......YYY.......","................"],"wecken":[".......y........",".......y........","..y.........y...","...y..yyy..y....",".....yyyyy......","....yyyyyyy.....","....yyyyyyy.....","yy..yyyyyyY..yy.","....yyyyyyY.....","....yyyyyYY.....",".....YyyYY......","...y..YYY..y....","..y.........y...",".......y........",".......y........","................"],"arbeit":["................","................",".....KKKKK......",".....K...K......","..kkkkkkkkkkk...","..kttttttttkk...","..ktttttttttk...","..ktttttttttk...","..kkkkkyykkkk...","..ktttkyykttk...","..ktttttttttk...","..ktttttttttk...","..kttttttttKk...","..kkkkkkkkkkk...","................","................"],"einrichten":["................","................","....mmmmmmmm....","...mmmmmmmmmm...","...mmmmmmmmmm...","...mmmmmmmmmm...",".mm.mmmmmmmm.mm.","mmmm........mmmm","mmmmmmmmmmmmmmmm","mmmmmmmmmmmmmmmm","MMMMMMMMMMMMMMMM",".MMMMMMMMMMMMMM.",".KK..........KK.",".KK..........KK.","................","................"],"plan":["................","......sSSs......","...kkksSSskkk...","...kppppppppk...","...kppppppppk...","...kpllpllllk...","...kppppppppk...","...kpllllplpk...","...kppppppppk...","...kplllpllpk...","...kppppppppk...","...kpllllpppk...","...kppppppppk...","...kkkkkkkkkk...","................","................"],"stopp":["................","................","..rr........rr..","..rrr......rrr..","...rrr....rrr...","....rrr..rrr....",".....rrrrrr.....","......rrrr......","......rrrr......",".....rrrrrr.....","....rrr..rrr....","...rrr....rrr...","..rrr......rrr..","..rr........rr..","................","................"]};
+const SYMFARBE={"r":"#d63a30","R":"#962428","h":"#ffbeaa","g":"#5caa46","G":"#306e34","k":"#7a4a28","K":"#54301a","b":"#54a0e2","B":"#2c62aa","w":"#f0f8ff","c":"#96d2fa","y":"#fad246","Y":"#de9628","s":"#b0b0bc","S":"#6e6e7e","p":"#faf4e2","l":"#786e64","m":"#c44040","M":"#8c2830","t":"#e8b060"},SYMRAND='#2b1e18';
+const symbolBild={};
+for(const [n,z] of Object.entries(SYMBOLE)){
+  const c=document.createElement('canvas');c.width=c.height=16;const x=c.getContext('2d');
+  const voll=(a,b)=>a>=0&&b>=0&&a<16&&b<16&&z[b][a]!=='.';
+  for(let b=0;b<16;b++)for(let a=0;a<16;a++){
+    if(voll(a,b)){x.fillStyle=SYMFARBE[z[b][a]];x.fillRect(a,b,1,1)}
+    else if(voll(a+1,b)||voll(a-1,b)||voll(a,b+1)||voll(a,b-1)){x.fillStyle=SYMRAND;x.fillRect(a,b,1,1)}}
+  symbolBild[n]='url('+c.toDataURL()+')';
+}
+function knopfSymbol(id,name,text){const k=$(id);k.firstElementChild.style.backgroundImage=symbolBild[name];k.setAttribute('aria-label',text);k.title=text}
+knopfSymbol('aFutter','essen','Essen');knopfSymbol('aWasch','waschen','Waschen');knopfSymbol('aSchlaf','schlafen','Schlafen');
+knopfSymbol('aArbeit','arbeit','Arbeit');knopfSymbol('aPlan','plan','Tagesplan');knopfSymbol('aDeko','einrichten','Einrichten');
 // ---------- Auswahlblatt: Titel, Text und Posten mit je einem Knopf ----------
 function blatt(titel,text,posten){
   $('bTitel').textContent=titel;$('bText').textContent=text;const l=$('bListe');l.textContent='';
@@ -703,7 +746,7 @@ $('bZu').addEventListener('click',()=>$('blatt').hidden=true);
 $('blatt').addEventListener('click',e=>{if(e.target===$('blatt'))$('blatt').hidden=true});
 
 // ---------- Essen ----------
-function setLegen(e){legen=e;$('aFutter').classList.toggle('aktiv',!!e);$('aFutter').textContent=e?'Stopp':'Essen'}
+function setLegen(e){legen=e;$('aFutter').classList.toggle('aktiv',!!e);knopfSymbol('aFutter',e?'stopp':'essen',e?'Essen hinlegen beenden':'Essen')}
 $('aFutter').addEventListener('click',()=>{
   if(legen){setLegen(null);return}
   const pleite=stand.geld<ESSEN[0].preis;
@@ -730,6 +773,10 @@ function buffetPasst(e,x,y){
   if(e.fuss&&versperrt(e.fuss.map(([c,r])=>[x+c,y+r])))return 'Das würde einen Weg versperren.';
   return '';
 }
+function buffetAufbauen(e,x,y){
+  stand.geld-=e.preis;const f={x,y,t:e.id,rest:e.portionen,rufBis:Date.now()+180000};
+  stand.futter.push(f);sperreNeu();umleiten();zaehle('fuettern');zaehle('buffet');hud();sichern();rufeZumEssen(f);return f;
+}
 function rufeZumEssen(f){ // wer gerade nur bummelt, schaut gleich vorbei
   for(const m of minis)if(!m.drin&&!m.fort&&!m.plan&&!m.akt&&m.pfad.length>1&&m.n.h<97)m.pfad=m.pfad.slice(0,1);
 }
@@ -740,8 +787,7 @@ function futterLegen(tx,ty){
     if(grund){sag(grund);return}
     if(stand.futter.length>=8){sag('Es steht schon genug Essen herum.');setLegen(null);return}
     if(stand.geld<e.preis){sag('Dafür reichen die Münzen nicht.');setLegen(null);return}
-    stand.geld-=e.preis;const f={x,y,t:e.id,rest:e.portionen,rufBis:Date.now()+180000};
-    stand.futter.push(f);sperreNeu();umleiten();zaehle('fuettern');zaehle('buffet');hud();sichern();setLegen(null);rufeZumEssen(f);
+    buffetAufbauen(e,x,y);setLegen(null);
     sag(e.name.replace(' für alle','')+' ist aufgebaut! '+e.portionen+' Portionen, alle dürfen sich bedienen.');return}
   if(!begehbar(tx,ty)||belegtVonEssen(tx,ty)){sag('Hier ist kein Platz für Essen.');return}
   if(stand.futter.length>=8){sag('Es liegen schon acht Portionen herum.');setLegen(null);return}
@@ -776,53 +822,174 @@ const eigenerLaden=j=>stand.frei.includes(ORTE[j.ort].parz);
 // Karriere je Laden: Zahl der Schichten bestimmt den Rang, der Rang den Lohn
 const RANG=[[25,'Leitung',1.5],[10,'Profi',1.3],[3,'Fachkraft',1.15],[0,'Aushilfe',1]];
 const rangVon=(m,ort)=>RANG.find(r=>((m.karriere||{})[ort]||0)>=r[0]);
-const lohnVon=(m,j,team)=>Math.round(j.lohn*(eigenerLaden(j)?1.25:1)*(.6+.4*m.n.l/100)*(1+Math.max(0,Math.floor(m.werte[j.wert])-j.min)*.1)
+// Zuschlag für lange Schichten, weil der Mini so lange nicht verfügbar ist: 10 Min 0 %, 1 Std +31 %, 3 Std +50 %, ab etwa 5 Std +60 %
+const zuschlag=min=>grenz(.12*Math.log2(min/10),0,.6);
+const SCHICHTEN=[60,180,480]; // wählbare lange Schichten in Minuten, zusätzlich zur Grunddauer des Jobs
+const dauerName=min=>min<60?min+' Min':(min%60?Math.floor(min/60)+' Std '+(min%60)+' Min':min/60+(min===60?' Stunde':' Stunden'));
+const muenzen=n=>n.toLocaleString('de-DE');
+const lohnVon=(m,j,team,min)=>Math.round(j.lohn*((min||j.dauer)/j.dauer)*(1+zuschlag(min||j.dauer))*(eigenerLaden(j)?1.25:1)*(.6+.4*m.n.l/100)*(1+Math.max(0,Math.floor(m.werte[j.wert])-j.min)*.1)
   *rangVon(m,j.ort)[2]*(hat(m,'arbeitstier')?1.1:hat(m,'faulpelz')?.9:1)*(team||(m.job&&m.job.team)?1.1:1));
-function restText(m){const s=Math.max(0,Math.ceil((m.job.ende-Date.now())/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+function restText(m){const s=Math.max(0,Math.ceil((m.job.ende-Date.now())/1000));
+  return s>=3600?Math.floor(s/3600)+':'+String(Math.floor(s%3600/60)).padStart(2,'0')+' Std':Math.floor(s/60)+':'+String(s%60).padStart(2,'0')+' Min'}
 function feierabend(m,bezahlt){
-  const j=jobVon(m),N=m.n,team=!!m.job.team;tuerAuf(ORTE[j.ort].tuer);m.job=null;m.fort=false;m.wart=1.5;m.richt=3;
+  const j=jobVon(m),N=m.n,team=!!m.job.team,min=m.job.min||j.dauer;tuerAuf(ORTE[j.ort].tuer);m.job=null;m.fort=false;m.wart=1.5;m.richt=3;
   if(!istFrei(parzVon(m.tx,m.ty))){const h=heimVon(m).tuer;geheZu(m,h[0],h[1]+1,null,false)||geheZu(m,h[0],h[1])} // aus gesperrtem Viertel wieder nach Hause
   if(!bezahlt){sag(m.name+' kommt ohne Lohn zurück.');sichern();return}
-  const lohn=lohnVon(m,j,team),schonung=hat(m,'arbeitstier')?.5:1;stand.geld+=lohn;
-  N.e=grenz(N.e-Math.min(40,j.dauer*.6)*schonung,0,100);N.h=grenz(N.h-Math.min(30,j.dauer*.4),0,100);N.s=grenz(N.s-Math.min(30,j.dauer*.3),0,100);
-  const vor=Math.floor(m.werte[j.wert]);m.werte[j.wert]=Math.min(10,m.werte[j.wert]+j.dauer*.01+.02);
-  const rVor=rangVon(m,j.ort)[1];m.karriere[j.ort]=(m.karriere[j.ort]||0)+1;const rNach=rangVon(m,j.ort)[1],hoch=rNach!==rVor;
-  const mehr=Math.floor(m.werte[j.wert])>vor,neu=ep(5+j.dauer+(hoch?20:0));
-  sag(m.name+' hat Feierabend: +'+lohn+' Münzen.'+(hoch?' Befördert: jetzt '+rNach+' '+ORTE[j.ort].im+'!':'')+(mehr?' '+wertName(j.wert)+' steigt auf '+Math.floor(m.werte[j.wert])+'.':'')+(neu?' Stufe '+stand.stufe+' erreicht!':''));
+  const lang=min>j.dauer,lohn=lohnVon(m,j,team,min),schonung=hat(m,'arbeitstier')?.5:1;stand.geld+=lohn;
+  // während der Schicht sinken die Bedürfnisse langsamer (Pausen), am Ende ist man trotzdem geschafft
+  N.e=grenz(N.e-(lang?15:Math.min(40,j.dauer*.6))*schonung,0,100);N.h=grenz(N.h-(lang?10:Math.min(30,j.dauer*.4)),0,100);N.s=grenz(N.s-(lang?15:Math.min(30,j.dauer*.3)),0,100);
+  const vor=Math.floor(m.werte[j.wert]);m.werte[j.wert]=Math.min(10,m.werte[j.wert]+Math.min(min,90)*.01+.02);
+  const rVor=rangVon(m,j.ort)[1];m.karriere[j.ort]=(m.karriere[j.ort]||0)+(lang?1+Math.floor(min/60):1);const rNach=rangVon(m,j.ort)[1],hoch=rNach!==rVor;
+  const mehr=Math.floor(m.werte[j.wert])>vor,neu=ep(5+Math.min(min,120)+(hoch?20:0));
+  sag(m.name+' hat Feierabend'+(lang?' nach '+dauerName(min):'')+': +'+muenzen(lohn)+' Münzen'+(zuschlag(min)>=.05?' (Zuschlag +'+Math.round(zuschlag(min)*100)+' %)':'')+'.'+(hoch?' Befördert: jetzt '+rNach+' '+ORTE[j.ort].im+'!':'')+(mehr?' '+wertName(j.wert)+' steigt auf '+Math.floor(m.werte[j.wert])+'.':'')+(neu?' Stufe '+stand.stufe+' erreicht!':''));
   zaehle('muenzen',lohn);zaehle('schichten');zaehle('ort_'+j.ort);if(team)zaehle('team');
   hud();sichern();
 }
 const kannArbeiten=(x,j)=>stand.stufe>=j.stufe&&Math.floor(x.werte[j.wert])>=j.min&&((x.karriere||{})[j.ort]||0)>=(j.erf||0)&&x.n.h>=25&&x.n.e>=25&&(x.n.s>=20||hat(x,'schmutzfink'));
-function arbeiten(m,j){
+function arbeiten(m,j,min){
   // Ein Plausch darf für die Arbeit unterbrochen werden, alles andere nicht
-  if(m.grund==='dusche'||(m.akt&&m.akt.typ!=='reden')){sag(m.name+' ist gerade beschäftigt.');return}
+  if(m.grund==='dusche'||(m.akt&&m.akt.typ!=='reden')){sag(m.name+' ist gerade beschäftigt.');return false}
   wecken(m);
   const o=ORTE[j.ort];
   // Beste Freunde gehen zusammen, wenn der andere frei ist und den Job kann
   const partner=minis.find(x=>x!==m&&freundWert(m,x)>=90&&!stand.streit[paar(m,x)]&&!x.fort&&!x.job&&!x.akt&&!x.plan&&!x.drin&&kannArbeiten(x,j));
-  if(!geheZu(m,o.tile[0],o.tile[1],{typ:'arbeit',j,team:!!partner},true)){sag(m.name+' findet keinen Weg dorthin.');return}
-  if(partner&&geheZu(partner,o.tile[0],o.tile[1],{typ:'arbeit',j,team:true},true))sag(m.name+' und '+partner.name+' gehen zusammen zur Arbeit '+o.im+'. Teamarbeit bringt mehr Lohn.');
-  else sag(m.name+' geht zur Arbeit '+o.im+'.');
+  if(!geheZu(m,o.tile[0],o.tile[1],{typ:'arbeit',j,team:!!partner,min:min||j.dauer},true)){sag(m.name+' findet keinen Weg dorthin.');return false}
+  if(partner&&geheZu(partner,o.tile[0],o.tile[1],{typ:'arbeit',j,team:true,min:min||j.dauer},true))sag(m.name+' und '+partner.name+' gehen zusammen zur Arbeit '+o.im+'. Teamarbeit bringt mehr Lohn.');
+  else sag(m.name+' geht zur Arbeit '+o.im+(min>j.dauer?', '+dauerName(min)+' lang':'')+'.');
+  return true;
 }
 const jobFehlt=(m,j)=>{const w=Math.floor(m.werte[j.wert]),e=(m.karriere||{})[j.ort]||0;
   return stand.stufe<j.stufe?'Ab Stufe '+j.stufe:w<j.min?wertName(j.wert)+' '+j.min+' nötig (hat '+w+')':e<(j.erf||0)?'Erst nach '+j.erf+' Schichten hier (hat '+e+')':''};
+const langSchwach=(m,min)=>min>=180&&(m.n.h<45||m.n.e<45)?'braucht für '+dauerName(min)+' Hunger und Energie über 45':'';
 const schwachText=m=>m.n.h<25?'hat zu viel Hunger':m.n.e<25?'ist zu müde':m.n.s<20&&!hat(m,'schmutzfink')?'ist zu schmutzig':'';
 function jobListe(m,ort){ // Karriereleiter eines Ladens
   const o=ORTE[ort],schwach=schwachText(m),e=(m.karriere||{})[ort]||0,naechster=[...RANG].reverse().find(r=>r[0]>e);
   blatt(o.name+' · '+m.name,(schwach?m.name+' '+schwach+' zum Arbeiten. ':'')+'Rang: '+rangVon(m,ort)[1]+' nach '+e+(e===1?' Schicht':' Schichten')+(naechster?', noch '+(naechster[0]-e)+' bis '+naechster[1]:'')+'. Jede Schicht hier zählt für die Leiter.',
     JOBS.filter(j=>j.ort===ort).map(j=>{const f=jobFehlt(m,j)||(schwach?m.name+' '+schwach:'');
-      return {titel:j.name,text:f||(j.dauer+' Min · '+lohnVon(m,j)+' Münzen · '+wertName(j.wert)),knopf:'Los',fehlt:!!f,fn:()=>arbeiten(m,j)}}));
+      return {titel:j.name,text:f||(j.dauer+' Min · '+muenzen(lohnVon(m,j))+' Münzen · '+wertName(j.wert)+' · länger möglich'),knopf:'Wählen',fehlt:!!f,fn:()=>schichtWahl(m,j)}}));
+}
+function schichtWahl(m,j){ // wie lange? Je länger, desto mehr pro Minute
+  const l=[j.dauer].concat(SCHICHTEN.filter(x=>x>j.dauer));
+  blatt(j.name+' · '+m.name,'Je länger die Schicht, desto mehr verdient '+m.name+' pro Minute. Dazu kommt ein Zuschlag, weil '+m.name+' so lange weg ist. Bei der Arbeit sinken Hunger und Energie langsamer.',
+    l.map(min=>{const f=langSchwach(m,min),z=Math.round(zuschlag(min)*100);
+      return {titel:min===j.dauer?'Kurz · '+dauerName(min):dauerName(min),text:f?m.name+' '+f:muenzen(lohnVon(m,j,false,min))+' Münzen'+(z?' · Zuschlag +'+z+' %':''),knopf:'Los',fehlt:!!f,fn:()=>arbeiten(m,j,min)}}));
 }
 $('aArbeit').addEventListener('click',()=>{
   const m=sel();
   if(m.klinik){sag(m.name+' liegt im Krankenhaus.');return}
   if(m.job){const j=jobVon(m);
-    blatt('Bei der Arbeit',m.name+' arbeitet gerade '+ORTE[j.ort].im+'. Die Schicht läuft auch weiter, wenn du das Spiel schließt.',[{titel:j.name,text:'Noch '+restText(m)+' Minuten · Lohn etwa '+lohnVon(m,j)+' Münzen',knopf:'Abbrechen',fn:()=>feierabend(m,false)}]);return}
+    blatt('Bei der Arbeit',m.name+' arbeitet gerade '+ORTE[j.ort].im+'. Die Schicht läuft auch weiter, wenn du das Spiel schließt.',[{titel:j.name,text:'Noch '+restText(m)+' · Lohn etwa '+muenzen(lohnVon(m,j,!!m.job.team,m.job.min))+' Münzen',knopf:'Abbrechen',fn:()=>feierabend(m,false)}]);return}
   const schwach=schwachText(m);
   blatt('Arbeit für '+m.name,(schwach?m.name+' '+schwach+' zum Arbeiten. ':'')+'Drei Läden, 25 Jobs. Wer oft im selben Laden arbeitet, steigt dort auf, schaltet bessere Jobs frei und verdient mehr.',
     Object.keys(ORTE).map(k=>{const l=JOBS.filter(j=>j.ort===k),geht=l.filter(j=>!jobFehlt(m,j)).length,e=(m.karriere||{})[k]||0;
       return {titel:ORTE[k].name,text:rangVon(m,k)[1]+' · '+e+(e===1?' Schicht':' Schichten')+' · '+geht+' von '+l.length+' Jobs möglich'+(eigenerLaden(l[0])?' · Lohn\u00a0+25\u00a0%':''),knopf:'Jobs',fn:()=>jobListe(m,k)}}));
 });
+// ---------- Tagesplan ----------
+const ESSORTE={A:['Beim Wohnwagen',[9,10]],B:['Am Seeufer',[19,12]],C:['Am Zeltplatz',[7,18]],D:['Auf der Blumenwiese',[22,16]],E:['In der Altstadt',[38,12]],F:['An der Marktstraße',[40,19]]};
+const PLANESSEN=['picknick','grill','obststand','korb','teller'];
+const zeitMin=s=>{const [a,b]=s.split(':').map(Number);return a*60+b};
+const jetztMin=()=>{const d=new Date();return d.getHours()*60+d.getMinutes()};
+function platzSuchen([cx,cy],ok){ // nächster passender Platz in Ringen um die Mitte
+  for(let r=0;r<10;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
+    if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;const x=cx+dx,y=cy+dy;
+    if(x>=0&&y>=0&&x<W&&y<H&&istFrei(parzVon(x,y))&&ok(x,y))return [x,y]}
+  return null;
+}
+function planEssen(e){
+  const art=ESSEN.find(x=>x.id===e.t);if(!art)return;
+  const ort=stand.frei.includes(e.ort)?ESSORTE[e.ort]:ESSORTE.A,name=art.name.replace(' für alle','');
+  if((art.stufe||1)>stand.stufe){sag('Geplantes Essen fällt aus: '+name+' gibt es erst ab Stufe '+art.stufe+'.');return}
+  if(art.portionen){
+    if(stand.futter.length>=8){sag('Geplantes Essen fällt aus: Es steht schon genug herum.');return}
+    if(stand.geld<art.preis){sag('Geplantes Essen fällt aus: Für '+name+' fehlen Münzen.');return}
+    const breit=Math.max(...art.flaeche.map(c=>c[0]))+1,p=platzSuchen([ort[1][0]-Math.floor((breit-1)/2),ort[1][1]],(x,y)=>buffetPasst(art,x,y)==='');
+    if(!p){sag('Geplantes Essen fällt aus: '+ort[0]+' ist kein Platz für '+name+'.');return}
+    buffetAufbauen(art,p[0],p[1]);sag('Laut Plan gibt es Essen: '+name+' ('+ort[0]+'). Alle dürfen sich bedienen.');return}
+  let n=0; // kleine Portionen: eine für jeden Mini, der da ist
+  for(const m of minis){if(m.fort||m.klinik)continue;if(stand.futter.length>=8||stand.geld<art.preis)break;
+    const p=platzSuchen(ort[1],(x,y)=>begehbar(x,y)&&!belegtVonEssen(x,y)&&!geschuetzt(x,y));if(!p)break;
+    stand.geld-=art.preis;stand.futter.push({x:p[0],y:p[1],t:art.id});n++}
+  if(n){zaehle('fuettern',n);hud();sichern();sag('Laut Plan: '+n+'× '+art.name+' liegt bereit.')}
+  else sag('Geplantes Essen fällt aus: '+(stand.geld<art.preis?'Es fehlen Münzen.':'Kein Platz.'));
+}
+function planArbeit(m,e,t){
+  const j=JOBS.find(x=>x.id===e.job);if(!j)return;
+  if(m.fort){sag(m.name+' ist noch beschäftigt und verpasst die geplante Schicht.');return}
+  const f=jobFehlt(m,j);if(f){sag('Geplante Schicht fällt aus: '+m.name+', '+j.name+'. '+f+'.');return}
+  const d=new Date();d.setHours(0,0,0,0);const min=e.min||j.dauer,start=d.getTime()+t*60000,ende=start+min*60000,jetzt=Date.now(),o=ORTE[j.ort];
+  const hin=()=>{m.drin=false;m.grund='';m.akt=null;m.plan=null;m.pfad=[];m.tx=o.tile[0];m.ty=o.tile[1];m.x=m.tx*T;m.y=m.ty*T;m.job={id:j.id,ende,team:false,min};m.fort=true;tuerAuf(o.tuer)};
+  if(jetzt>=ende){hin();feierabend(m,true);return} // ganz verpasst, weil das Spiel zu war: die Schicht gilt als gearbeitet
+  if(jetzt-start<3*60000){ // pünktlich: läuft selbst hin
+    const s=schwachText(m)||langSchwach(m,min);if(s){sag('Geplante Schicht fällt aus: '+m.name+' '+s+'.');return}
+    if(m.grund==='dusche'||(m.akt&&m.akt.typ!=='reden')){m.akt=null}
+    arbeiten(m,j,min);return}
+  hin();sag('Laut Plan arbeitet '+m.name+' seit '+e.zeit+' '+o.im+'.');sichern(); // Spiel war zu: seit Schichtbeginn im Laden
+}
+function planTermin(m,e,t){
+  if(m.klinik){sag(m.name+' liegt im Krankenhaus und verpasst einen Termin.');return}
+  if(e.was==='arbeit'){planArbeit(m,e,t);return}
+  if(m.fort)return;
+  if(e.was==='waschen'){if(m.n.s>=90)return;wecken(m);const see=stand.frei.includes('B'),z=see?SEE:heimVon(m).tuer;
+    if(geheZu(m,z[0],z[1],{typ:see?'see':'dusche'}))sag('Laut Plan: '+m.name+(see?' geht im See baden.':' geht duschen.'));return}
+  if(e.was==='spielen'){const l=stand.deko.filter(d=>KAT[d.k].spiel&&istFrei(parzVon(d.x,d.y))).sort(()=>Math.random()-.5);
+    if(!l.length){sag(m.name+' wollte laut Plan spielen, aber es gibt kein Spielzeug.');return}
+    wecken(m);for(const d of l)if(spielen(m,d)){sag('Laut Plan: '+m.name+' geht '+KAT[d.k].zu+'.');return}}
+}
+function planPruefen(){
+  const jm=jetztMin(),tag=heute();
+  const faellig=(e,fenster)=>{const t=zeitMin(e.zeit);return stand.planLauf[e.id]!==tag&&jm>=t&&jm-t<=fenster};
+  for(const e of stand.plan.essen)if(faellig(e,120)){stand.planLauf[e.id]=tag;planEssen(e)}
+  for(const m of minis){const p=stand.plan.minis[m.id];if(!p)continue;
+    for(const e of p.termine)if(faellig(e,e.was==='arbeit'?1440:60)){stand.planLauf[e.id]=tag;planTermin(m,e,zeitMin(e.zeit))}}
+}
+setInterval(planPruefen,15000);setTimeout(planPruefen,2500);
+// Bearbeiten: einfache Formularzeilen mit Uhrzeit und Auswahllisten
+function planZeigen(){
+  const P=stand.plan,box=$('pInhalt');box.textContent='';
+  const neu=(tag,eig)=>Object.assign(document.createElement(tag),eig||{});
+  const geaendert=e=>{if(e&&e.zeit&&zeitMin(e.zeit)<=jetztMin())stand.planLauf[e.id]=heute();sichern()}; // schon vorbei: erst ab morgen
+  const zeit=(e,feld,nach)=>{const i=neu('input',{type:'time',value:e[feld],step:300});i.addEventListener('change',()=>{if(i.value){e[feld]=i.value;geaendert(feld==='zeit'?e:null);if(nach)nach()}});return i};
+  const wahl=(liste,wert,nach)=>{const s=neu('select');for(const o of liste){if(o.gruppe){const g=neu('optgroup',{label:o.gruppe});for(const u of o.l)g.append(neu('option',{value:u.v,textContent:u.t,disabled:!!u.aus}));s.append(g)}else s.append(neu('option',{value:o.v,textContent:o.t,disabled:!!o.aus}))}
+    s.value=wert;s.addEventListener('change',()=>nach(s.value));return s};
+  const weg=fn=>{const b=neu('button',{className:'x',textContent:'×',title:'Entfernen'});b.setAttribute('aria-label','Entfernen');b.addEventListener('click',()=>{fn();sichern();planZeigen()});return b};
+  const zeile=(...k)=>{const d=neu('div',{className:'pz'});d.append(...k.filter(Boolean));return d};
+  const plus=(text,fn)=>{const b=neu('button',{className:'knopf plus',textContent:text});b.addEventListener('click',()=>{fn();sichern();planZeigen()});return b};
+  const id=()=>'p'+(++stand.planNr);
+  // Mahlzeiten
+  box.append(neu('h3',{textContent:'Mahlzeiten für alle'}),neu('p',{className:'klein',textContent:'Zur Uhrzeit wird das Essen automatisch aufgebaut und bezahlt. Kleine Portionen gibt es einmal für jeden Mini.'}));
+  const orte=Object.keys(ESSORTE).filter(k=>stand.frei.includes(k)).map(k=>({v:k,t:ESSORTE[k][0]}));
+  for(const e of P.essen){
+    const art=ESSEN.find(x=>x.id===e.t);
+    box.append(zeile(zeit(e,'zeit'),wahl(PLANESSEN.map(k=>{const a=ESSEN.find(x=>x.id===k);return {v:k,t:a.name.replace(' für alle','')+' · '+a.preis+(a.portionen?'':' je Mini'),aus:(a.stufe||1)>stand.stufe}}),e.t,v=>{e.t=v;sichern()}),
+      wahl(orte,stand.frei.includes(e.ort)?e.ort:'A',v=>{e.ort=v;sichern()}),weg(()=>{P.essen=P.essen.filter(x=>x!==e)}),
+      (art.stufe||1)>stand.stufe?neu('span',{className:'fehlt',textContent:'Erst ab Stufe '+art.stufe+'.'}):null));
+  }
+  box.append(plus('+ Mahlzeit',()=>{const e={id:id(),zeit:'12:00',t:'picknick',ort:'A'};P.essen.push(e);geaendert(e)}));
+  // je Mini
+  for(const m of minis){
+    const p=P.minis[m.id]||(P.minis[m.id]={schlaf:null,termine:[]});
+    box.append(neu('h3',{textContent:m.name}));
+    const sz=zeile(neu('label',{textContent:'Schlafen:'}),wahl([{v:'gefuehl',t:'Nach Gefühl'},{v:'fest',t:'Feste Zeit'}],p.schlaf?'fest':'gefuehl',v=>{p.schlaf=v==='fest'?{von:'22:00',bis:'07:00'}:null;sichern();planZeigen()}));
+    if(p.schlaf)sz.append(zeit(p.schlaf,'von',sichern),neu('label',{textContent:'bis'}),zeit(p.schlaf,'bis',sichern),neu('span',{className:'info',textContent:'Zur Weckzeit steht '+m.name+' auf, außer die Energie ist ganz unten.'}));
+    box.append(sz);
+    for(const e of p.termine){
+      const k=[zeit(e,'zeit'),wahl([{v:'arbeit',t:'Arbeiten'},{v:'waschen',t:'Waschen'},{v:'spielen',t:'Spielen'}],e.was,v=>{e.was=v;if(v==='arbeit'&&!e.job){e.job='lager';e.min=JOBS[0].dauer}sichern();planZeigen()})];
+      let fehlt='';
+      if(e.was==='arbeit'){
+        const j=JOBS.find(x=>x.id===e.job)||JOBS[0];
+        k.push(wahl(Object.keys(ORTE).map(o=>({gruppe:ORTE[o].name,l:JOBS.filter(x=>x.ort===o).map(x=>({v:x.id,t:x.name,aus:!!jobFehlt(m,x)}))})),j.id,v=>{e.job=v;const nj=JOBS.find(x=>x.id===v);if(!(e.min===nj.dauer||SCHICHTEN.includes(e.min)&&e.min>nj.dauer))e.min=nj.dauer;sichern();planZeigen()}));
+        k.push(wahl([j.dauer].concat(SCHICHTEN.filter(x=>x>j.dauer)).map(x=>({v:String(x),t:(x===j.dauer?'Kurz, ':'')+dauerName(x)+' · '+muenzen(lohnVon(m,j,false,x))})),String(e.min||j.dauer),v=>{e.min=Number(v);sichern()}));
+        fehlt=jobFehlt(m,j);
+      }
+      k.push(weg(()=>{p.termine=p.termine.filter(x=>x!==e)}));
+      if(fehlt)k.push(neu('span',{className:'fehlt',textContent:'Geht noch nicht: '+fehlt+'.'}));
+      box.append(zeile(...k));
+    }
+    box.append(plus('+ Termin',()=>{const e={id:id(),zeit:'08:00',was:'arbeit',job:'lager',min:JOBS[0].dauer};p.termine.push(e);geaendert(e)}));
+  }
+}
+$('aPlan').addEventListener('click',()=>{planZeigen();$('plan').hidden=false});
+$('pZu').addEventListener('click',()=>{$('plan').hidden=true;sichern();planPruefen();sag('Tagesplan gespeichert.')});
 // ---------- Neue Minis ----------
 // Preis richtet sich nach der Summe der Werte
 function neuesAngebot(){
@@ -874,13 +1041,13 @@ function balken(){
   const m=sel(),N=m.n;
   $('sName').textContent=m.name;$('klapp').classList.toggle('knapp',Math.min(N.h,N.s,N.e,N.l)<30);$('vor').hidden=$('nach').hidden=minis.length<2;
   for(const [id,v] of [['bH',N.h],['bS',N.s],['bE',N.e],['bL',N.l]]){const b=$(id);b.firstElementChild.style.width=Math.round(v)+'%';b.classList.toggle('knapp',v<30)}
-  $('aSchlaf').textContent=m.drin&&m.grund!=='dusche'?'Wecken':'Schlafen';
+  {const wach=!(m.drin&&m.grund!=='dusche');if($('aSchlaf').title!==(wach?'Schlafen':'Wecken'))knopfSymbol('aSchlaf',wach?'schlafen':'wecken',wach?'Schlafen':'Wecken')}
   const w=$('werte');if(!w.childElementCount)for(const [k,kurz,lang] of WERTE){const d=document.createElement('div');d.title=lang;d.innerHTML='<small>'+kurz+'</small><b></b>';w.append(d)}
   WERTE.forEach(([k],i)=>w.children[i].lastElementChild.textContent=Math.floor(m.werte[k]));
   const a=m.akt;
   const mit=a&&a.typ==='reden'&&minis.find(x=>x.id===a.mit);
   const gegner=a&&a.typ==='pruegel'&&minis.find(x=>x.id===a.mit);
-  $('lage').textContent=m.klinik?'Liegt im Krankenhaus':gegner?'Prügelt sich mit '+gegner.name:mit?'Unterhält sich mit '+mit.name:m.job?'Arbeitet '+ORTE[jobVon(m).ort].im+', noch '+restText(m)+' Min':m.grund==='dusche'?'Duscht gerade':m.drin?'Schläft · '+heimVon(m).name:a&&a.typ==='essen'?'Isst gerade':a&&a.typ==='baden'?'Badet im See':m.plan&&m.plan.typ==='arbeit'?'Auf dem Weg zur Arbeit':'Wohnt hier: '+heimVon(m).name;
+  $('lage').textContent=m.klinik?'Liegt im Krankenhaus':gegner?'Prügelt sich mit '+gegner.name:mit?'Unterhält sich mit '+mit.name:m.job?'Arbeitet '+ORTE[jobVon(m).ort].im+', noch '+restText(m):m.grund==='dusche'?'Duscht gerade':m.drin?'Schläft · '+heimVon(m).name:a&&a.typ==='essen'?'Isst gerade':a&&a.typ==='baden'?'Badet im See':m.plan&&m.plan.typ==='arbeit'?'Auf dem Weg zur Arbeit':'Wohnt hier: '+heimVon(m).name;
   $('art').textContent=m.art.map(a=>ARTEN[a].name).join(' · ');
   $('karr').textContent=Object.keys(ORTE).filter(o=>m.karriere[o]).map(o=>ORTE[o].name+': '+rangVon(m,o)[1]+' ('+m.karriere[o]+')').join(' · ');
   $('gedanke').textContent=m.letzter?'Denkt: „'+m.letzter+'“':'';
@@ -1402,7 +1569,7 @@ function schrittMini(m,dt,h){
   }
   if(m.drin){
     // Aufwachen: ausgeschlafen und nicht mehr Nacht
-    if(schlaeft&&N.e>=100&&!bettzeit(m,h)){tuerAuf(m.heim);m.drin=false;m.grund='';m.wart=1;ep(5,m.name+' ist ausgeschlafen');zaehle('schlaf');sichern()}
+    if(schlaeft&&!bettzeit(m,h)&&(N.e>=100||(m.grund==='nacht'&&planSchlaf(m)&&N.e>=30))){tuerAuf(m.heim);m.drin=false;m.grund='';m.wart=1;ep(5,m.name+' ist ausgeschlafen');zaehle('schlaf');sichern()}
     return;
   }
   // Eigene Entscheidungen, Reihenfolge = Dringlichkeit
@@ -1782,7 +1949,7 @@ const blasen=[]; // Sprechblasen werden gesammelt und zuletzt über alles gezeic
 // ---------- Zeitschilder: Schlaf bis voll, Restzeit der Schicht ----------
 const SCHLAFRATE=40; // Energie pro Stunde im Schlaf, siehe beduerfnisse()
 const dauerText=min=>{const g=Math.ceil(min);return min<=0?'gleich':g<60?g+' Min':Math.floor(g/60)+':'+String(g%60).padStart(2,'0')+' Std'};
-const weckZeit=m=>hat(m,'nachteule')?'8:00':hat(m,'morgenmuffel')?'7:30':'6:00';
+const weckZeit=m=>planSchlaf(m)?planSchlaf(m).bis.replace(/^0/,''):hat(m,'nachteule')?'8:00':hat(m,'morgenmuffel')?'7:30':'6:00';
 function schlafText(m){
   if(m.n.e<99.5)return 'voll in '+dauerText((100-m.n.e)/SCHLAFRATE*60);
   return bettzeit(m,stunde())?'wach um '+weckZeit(m):'wacht auf';
@@ -1796,8 +1963,8 @@ function zeichneTimer(){
   for(const h of HEIME){const l=minis.filter(m=>m.drin&&m.heim===h.id&&m.grund!=='dusche'&&!m.fort);
     l.forEach((m,i)=>schilder.push({x:h.zz[0]*T,y:h.zz[1]*T-12,i,n:l.length,text:m.name+' · '+schlafText(m),wert:m.n.e/100,art:'schlaf'}))}
   for(const o in ORTE){const l=minis.filter(m=>m.fort&&m.job&&!m.klinik&&jobVon(m).ort===o);if(!l.length)continue;const [x,y]=ortPunkt(o);
-    l.forEach((m,i)=>{const j=jobVon(m),rest=Math.max(0,(m.job.ende-Date.now())/60000);schilder.push({x,y,i,n:l.length,text:m.name+' · noch '+restText(m)+' Min',wert:1-rest/j.dauer,art:'arbeit'})})}
-  ctx.font='600 7px "Pixelify Sans",monospace';ctx.textAlign='left';
+    l.forEach((m,i)=>{const j=jobVon(m),rest=Math.max(0,(m.job.ende-Date.now())/60000);schilder.push({x,y,i,n:l.length,text:m.name+' · noch '+restText(m),wert:1-rest/(m.job.min||j.dauer),art:'arbeit'})})}
+  ctx.font='600 7px "Ziffern","Pixelify Sans",monospace';ctx.textAlign='left';
   const sx0=cam.x-30,sx1=cam.x+vw/z+30,sy0=cam.y-20,sy1=cam.y+vh/z+60;
   for(const s of schilder){
     if(s.x<sx0||s.x>sx1||s.y<sy0||s.y>sy1)continue; // Haus oder Laden nicht im Bild: kein Schild
@@ -1820,7 +1987,7 @@ function zeichneTimer(){
 }
 function zeichneBlasen(){
   const g=grenz(1.6/z,.5,2.4); // auf dem Bildschirm immer etwa gleich groß
-  ctx.font='600 7px "Pixelify Sans",monospace';ctx.textAlign='center';
+  ctx.font='600 7px "Ziffern","Pixelify Sans",monospace';ctx.textAlign='center';
   for(const b of blasen){
     const w=Math.ceil(ctx.measureText(b.text).width)+8;
     // seitlich im Terrarium und im Bild halten, die Spitze bleibt beim Mini
@@ -1857,7 +2024,7 @@ function zeichneMini(m,t){
     const o=minis.find(x=>x.id===m.akt.mit)||m,cx=(m.x+o.x)/2+8,cy=(m.y+o.y)/2-2;
     for(let i=0;i<9;i++){const w=t*7+i*2.1,r=5+((i*5)%4);ctx.fillStyle=i%3?'rgba(226,222,212,.9)':'rgba(198,192,180,.9)';ctx.beginPath();ctx.arc(cx+Math.cos(w)*9+Math.sin(w*1.7)*3,cy+Math.sin(w*1.3)*7,r,0,7);ctx.fill()}
     ctx.fillStyle='#f0c030';for(let i=0;i<4;i++){const w=t*5+i*1.6,x=Math.round(cx+Math.cos(w)*17),y=Math.round(cy-6+Math.sin(w*1.4)*12);ctx.fillRect(x-1,y,3,1);ctx.fillRect(x,y-1,1,3)}
-    ctx.fillStyle='#3b2414';ctx.font='600 7px "Pixelify Sans",monospace';ctx.textAlign='center';ctx.fillText(['#!','@#','!!','*!'][Math.floor(t*5)%4],Math.round(cx+Math.sin(t*9)*6),Math.round(cy-14));
+    ctx.fillStyle='#3b2414';ctx.font='600 7px "Ziffern","Pixelify Sans",monospace';ctx.textAlign='center';ctx.fillText(['#!','@#','!!','*!'][Math.floor(t*5)%4],Math.round(cx+Math.sin(t*9)*6),Math.round(cy-14));
   }
   // Karriere-Abzeichen: Bronze, Silber, Gold für den höchsten Rang
   const rg=Math.max(...Object.keys(ORTE).map(o=>rangVon(m,o)[0]));
@@ -1946,7 +2113,7 @@ function zeichne(t){
   ctx.globalCompositeOperation='source-over';
   if(bau)zeichneBau(t);
   // Zeichen über den Heimen: Schlaf oder Dusche
-  const b=(t*.5)%1;ctx.font='600 8px "Pixelify Sans",monospace';ctx.textAlign='left';
+  const b=(t*.5)%1;ctx.font='600 8px "Ziffern","Pixelify Sans",monospace';ctx.textAlign='left';
   for(const hm2 of HEIME){const drin=minis.filter(m=>m.drin&&m.heim===hm2.id);if(!drin.length)continue;
     const x=hm2.zz[0]*T,y=hm2.zz[1]*T;
     if(drin.some(m=>m.grund==='dusche')){ctx.fillStyle='#bfe6f5';for(let i=0;i<6;i++){const p=(t*1.3+i/6)%1;ctx.globalAlpha=1-p;ctx.fillRect(x-14+i*4,y-p*16,2,2)}}
@@ -1969,8 +2136,8 @@ function zeichne(t){
     const mx=x+w/2,my=y+hh/2,g=Math.max(1,1.1/z); // Schild bleibt bei kleinem Zoom lesbar
     ctx.save();ctx.translate(mx,my);ctx.scale(g,g);
     ctx.fillStyle='#5b3a21';ctx.fillRect(-56,-17,112,34);ctx.fillStyle='#fff1d6';ctx.fillRect(-54,-15,108,30);
-    ctx.fillStyle='#3b2414';ctx.textAlign='center';ctx.font='600 10px "Pixelify Sans",monospace';ctx.fillText(p.name,0,-3);
-    ctx.font='8px "Pixelify Sans",monospace';ctx.fillText(p.preis+' Münzen · Stufe '+p.stufe,0,9);ctx.restore();
+    ctx.fillStyle='#3b2414';ctx.textAlign='center';ctx.font='600 10px "Ziffern","Pixelify Sans",monospace';ctx.fillText(p.name,0,-3);
+    ctx.font='8px "Ziffern","Pixelify Sans",monospace';ctx.fillText(p.preis+' Münzen · Stufe '+p.stufe,0,9);ctx.restore();
   }
   terrarium();
   const d=MODI[modus]==null?new Date():null;
@@ -2002,7 +2169,7 @@ function terrarium(){
   ctx.fillStyle='rgba(0,0,0,.35)';ctx.fillRect(-4,h+39,w+8,4);
   const px=Math.min(Math.max(cam.x+vw/z/2,60),w-60);
   ctx.fillStyle='#c9a45a';ctx.fillRect(px-46,h+24,92,11);ctx.fillStyle='#8a6a2c';ctx.fillRect(px-46,h+34,92,1);ctx.fillRect(px-44,h+26,1,1);ctx.fillRect(px+43,h+26,1,1);
-  ctx.fillStyle='#3b2414';ctx.font='600 8px "Pixelify Sans",monospace';ctx.textAlign='center';ctx.fillText('MINI-TERRARIUM',px,h+32);
+  ctx.fillStyle='#3b2414';ctx.font='600 8px "Ziffern","Pixelify Sans",monospace';ctx.textAlign='center';ctx.fillText('MINI-TERRARIUM',px,h+32);
 }
 let zuletzt=0;
 // Läuft die Seite im Hintergrund, bleibt die Bildschleife stehen. Die verpasste Zeit wird beim Zurückkommen nachgerechnet,
@@ -2013,6 +2180,7 @@ function nachholen(dt){
   if(sek<1)return;
   const std=Math.min(8,sek/3600);
   for(const m of minis)if(!m.klinik)beduerfnisse(m.n,std,m.drin&&m.grund!=='dusche',15,launeBonus(m),raten(m));
+  if(sek>=60)setTimeout(planPruefen,500);
   if(sek>=60)sag('Du warst '+(std<1?Math.round(std*60)+' Minuten':std.toFixed(1).replace('.',',')+' Stunden')+' weg.');
   balken();sichern();
 }
