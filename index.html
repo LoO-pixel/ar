@@ -977,8 +977,11 @@ setInterval(planPruefen,15000);setTimeout(planPruefen,2500);
 function planZeigen(){
   const P=stand.plan,box=$('pInhalt');box.textContent='';
   const neu=(tag,eig)=>Object.assign(document.createElement(tag),eig||{});
-  const geaendert=e=>{if(e&&e.zeit&&zeitMin(e.zeit)<=jetztMin())stand.planLauf[e.id]=heute();sichern()}; // schon vorbei: erst ab morgen
-  const zeit=(e,feld,nach)=>{const i=neu('input',{type:'time',value:e[feld],step:300});i.addEventListener('change',()=>{if(i.value){e[feld]=i.value;geaendert(feld==='zeit'?e:null);if(nach)nach()}});return i};
+  // Uhrzeit geändert: liegt sie mehr als zwei Minuten zurück, gilt der Eintrag erst ab morgen, sonst läuft er heute noch
+  const geaendert=e=>{if(e&&e.zeit){if(zeitMin(e.zeit)<jetztMin()-2)stand.planLauf[e.id]=heute();else delete stand.planLauf[e.id]}sichern();setTimeout(planPruefen,400)};
+  const bald=()=>{const t=Math.ceil((jetztMin()+1)/5)*5%1440;return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')}; // nächste volle fünf Minuten
+  const heuteFertig=e=>stand.planLauf[e.id]===heute()&&zeitMin(e.zeit)<=jetztMin()?neu('span',{className:'info',textContent:'Für heute vorbei, wieder morgen um '+e.zeit+'. Für heute noch: Uhrzeit in die Zukunft stellen.'}):null;
+  const zeit=(e,feld,nach)=>{const i=neu('input',{type:'time',value:e[feld],step:300});i.addEventListener('change',()=>{if(i.value){e[feld]=i.value;if(feld==='zeit'){geaendert(e);planZeigen()}if(nach)nach()}});return i};
   const wahl=(liste,wert,nach)=>{const s=neu('select');for(const o of liste){if(o.gruppe){const g=neu('optgroup',{label:o.gruppe});for(const u of o.l)g.append(neu('option',{value:u.v,textContent:u.t,disabled:!!u.aus}));s.append(g)}else s.append(neu('option',{value:o.v,textContent:o.t,disabled:!!o.aus}))}
     s.value=wert;s.addEventListener('change',()=>nach(s.value));return s};
   const weg=fn=>{const b=neu('button',{className:'x',textContent:'×',title:'Entfernen'});b.setAttribute('aria-label','Entfernen');b.addEventListener('click',()=>{fn();sichern();planZeigen()});return b};
@@ -992,9 +995,9 @@ function planZeigen(){
     const art=ESSEN.find(x=>x.id===e.t);
     box.append(zeile(zeit(e,'zeit'),wahl(PLANESSEN.map(k=>{const a=ESSEN.find(x=>x.id===k);return {v:k,t:a.name.replace(' für alle','')+' · '+a.preis+(a.portionen?'':' je Mini'),aus:(a.stufe||1)>stand.stufe}}),e.t,v=>{e.t=v;sichern()}),
       wahl(orte,stand.frei.includes(e.ort)?e.ort:'A',v=>{e.ort=v;sichern()}),weg(()=>{P.essen=P.essen.filter(x=>x!==e)}),
-      (art.stufe||1)>stand.stufe?neu('span',{className:'fehlt',textContent:'Erst ab Stufe '+art.stufe+'.'}):null));
+      (art.stufe||1)>stand.stufe?neu('span',{className:'fehlt',textContent:'Erst ab Stufe '+art.stufe+'.'}):heuteFertig(e)));
   }
-  box.append(plus('+ Mahlzeit',()=>{const e={id:id(),zeit:'12:00',t:'picknick',ort:'A'};P.essen.push(e);geaendert(e)}));
+  box.append(plus('+ Mahlzeit',()=>{const e={id:id(),zeit:bald(),t:'picknick',ort:'A'};P.essen.push(e);geaendert(e)}));
   // je Mini
   for(const m of minis){
     const p=P.minis[m.id]||(P.minis[m.id]={schlaf:null,termine:[]});
@@ -1012,10 +1015,10 @@ function planZeigen(){
         fehlt=jobFehlt(m,j);
       }
       k.push(weg(()=>{p.termine=p.termine.filter(x=>x!==e)}));
-      if(fehlt)k.push(neu('span',{className:'fehlt',textContent:'Geht noch nicht: '+fehlt+'.'}));
+      if(fehlt)k.push(neu('span',{className:'fehlt',textContent:'Geht noch nicht: '+fehlt+'.'}));else k.push(heuteFertig(e));
       box.append(zeile(...k));
     }
-    box.append(plus('+ Termin',()=>{const e={id:id(),zeit:'08:00',was:'arbeit',job:'lager',min:JOBS[0].dauer};p.termine.push(e);geaendert(e)}));
+    box.append(plus('+ Termin',()=>{const e={id:id(),zeit:bald(),was:'arbeit',job:'lager',min:JOBS[0].dauer};p.termine.push(e);geaendert(e)}));
   }
 }
 $('aPlan').addEventListener('click',()=>{planZeigen();$('plan').hidden=false});
