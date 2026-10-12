@@ -147,12 +147,67 @@ body.bauen #hinweis{bottom:calc(var(--unten) + 150px)}
 body:not(.innen) #innenLeiste,body.innen #aktionen{display:none}
 @media (orientation:landscape) and (max-height:520px){#innenLeiste{left:auto;transform:none;right:max(16px,env(safe-area-inset-right,0px));flex-direction:column;gap:6px;padding:4px 2px}}
 @media (prefers-reduced-motion:reduce){#hinweis{transition:none}.chip.abholen{animation:none}}
+/* ---------- Spielgefühl: Titel, Anleitung, Banner, Knöpfe ---------- */
+.knopf,.chip,#aktionen .knopf{transition:transform .08s ease-out,filter .08s ease-out}
+.knopf:active:not(:disabled),button.chip:active{transform:translateY(1px) scale(.96);filter:brightness(1.12)}
+#aktionen .knopf{box-shadow:0 3px 0 rgba(0,0,0,.35)}
+#aktionen .knopf:active{box-shadow:0 1px 0 rgba(0,0,0,.35)}
+@keyframes aufgehen{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+#blatt:not([hidden]) .tafel,#plan:not([hidden]) .tafel,#dialog:not([hidden]) .tafel,#nameDlg:not([hidden]) .tafel,#anleitung:not([hidden]) .tafel{animation:aufgehen .18s ease-out}
+#uhr::before{content:'';flex:none;align-self:center;width:10px;height:8px;margin-right:3px;background:linear-gradient(to bottom,var(--tinte) 0 2px,transparent 2px 3px,var(--tinte) 3px 5px,transparent 5px 6px,var(--tinte) 6px 8px)}
+/* Titelbildschirm: das lebende Terrarium schimmert verschwommen durch */
+#titel{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;
+  background:radial-gradient(ellipse at 50% 40%,rgba(42,35,48,.55),rgba(14,12,20,.92));-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);transition:opacity .45s}
+#titel.weg{opacity:0;pointer-events:none}
+.logo{display:flex;flex-direction:column;align-items:center;line-height:.9;font-weight:600;letter-spacing:.04em;animation:schweben 3.2s ease-in-out infinite}
+.logo span{color:#ffd45a;text-shadow:3px 0 0 #5b3a21,-3px 0 0 #5b3a21,0 3px 0 #5b3a21,0 -3px 0 #5b3a21,3px 3px 0 #5b3a21,-3px 3px 0 #5b3a21,3px -3px 0 #5b3a21,-3px -3px 0 #5b3a21,0 8px 0 rgba(0,0,0,.45)}
+.logo span:first-child{font-size:58px}
+.logo span:last-child{font-size:34px;color:#a8e07a}
+@keyframes schweben{50%{transform:translateY(-6px)}}
+.minisReihe{display:flex;gap:14px;height:96px;align-items:flex-end}
+.minisReihe i{display:block;width:48px;height:96px;image-rendering:pixelated;background-repeat:no-repeat;background-size:1152px 768px;animation:gehen .8s steps(6) infinite}
+@keyframes gehen{from{background-position:-864px -192px}to{background-position:-1152px -192px}}
+.unter{margin:0;color:var(--papier);font-size:15px;letter-spacing:.06em;text-shadow:0 2px 0 rgba(0,0,0,.5)}
+#titel .knopf{flex:none;min-width:210px;font-size:20px;padding:6px 18px}
+#titel .knopf.klein{min-width:0;font-size:15px}
+.titelReihe{display:flex;flex-direction:column;align-items:center;gap:10px}
+.tippHinweis{margin:0;color:rgba(255,241,214,.7);font-size:12px;animation:blinken 1.6s steps(2) infinite}
+@keyframes blinken{50%{opacity:.25}}
+/* Anleitung */
+#anleitung{position:fixed;inset:0;z-index:35;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,14,22,.62)}
+#anleitung .tafel{width:min(360px,100%);max-height:88%;display:flex;flex-direction:column;gap:10px;padding:8px}
+#aInhalt{overflow-y:auto;min-height:0;flex:1 1 auto;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
+.aKopf{display:flex;align-items:center;gap:12px}
+.aKopf i{flex:none;width:48px;height:48px;background-size:48px 48px;image-rendering:pixelated}
+.aKopf h2{margin:0;font-size:22px;font-weight:600;line-height:1.1}
+#aText{margin:0;font-size:14px;line-height:1.4}
+#aListe{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+#aListe li{display:block;font-size:13px;line-height:1.35;border-top:2px solid var(--holz);padding-top:6px}
+#aListe li b{display:block;font-size:14px;margin-bottom:1px}
+#aListe li.voll{grid-template-columns:1fr}
+.punkte{display:flex;justify-content:center;gap:6px;margin-top:2px}
+.punkte i{width:8px;height:8px;background:#d9c6a2;box-shadow:0 0 0 2px var(--holz)}
+.punkte i.an{background:var(--gold)}
+#aWeg{align-self:center;background:none;border:0;font-size:12px;text-decoration:underline;padding:4px;color:var(--tinte)}
+/* Banner für Erfolge, Stufen und Gebiete */
+#banner{position:fixed;z-index:30;left:50%;top:calc(env(safe-area-inset-top,0px) + 6px);width:min(360px,calc(100% - 24px));transform:translate(-50%,-140%);
+  display:flex;align-items:center;gap:10px;padding:2px 6px;transition:transform .35s cubic-bezier(.2,1.4,.4,1);cursor:pointer}
+#banner.da{transform:translate(-50%,0)}
+#banner i{flex:none;width:40px;height:40px;background-size:40px 40px;image-rendering:pixelated;animation:wackeln .6s ease-in-out 2}
+#banner div{display:flex;flex-direction:column;gap:1px;min-width:0}
+#banner b{font-size:16px;font-weight:600}
+#banner span{font-size:12px;line-height:1.3}
+#banner[data-art=stufe] b{font-size:20px;color:#8a5a10}
+@keyframes wackeln{25%{transform:rotate(-10deg) scale(1.1)}75%{transform:rotate(10deg) scale(1.1)}}
+@media (prefers-reduced-motion:reduce){.logo,.minisReihe i,.tippHinweis,#banner i{animation:none}#banner{transition:none}}
+@media (orientation:landscape) and (max-height:520px){#titel{gap:10px;flex-direction:row;flex-wrap:wrap;align-content:center}.logo span:first-child{font-size:44px}.logo span:last-child{font-size:26px}.minisReihe{height:72px}.minisReihe i{width:36px;height:72px;background-size:864px 576px;animation-name:gehenKlein}.unter,.tippHinweis{flex-basis:100%;text-align:center}}
+@keyframes gehenKlein{from{background-position:-648px -144px}to{background-position:-864px -144px}}
 </style>
 </head>
 <body>
 <canvas id="c" aria-label="Terrarium mit deinem Mini"></canvas>
 <div id="hud">
-  <button id="uhr" class="tafel chip" title="Tageszeit testen"><span id="zeit">--:--</span><small id="phase"></small></button>
+  <button id="uhr" class="tafel chip" title="Menü" aria-label="Menü"><span id="zeit">--:--</span><small id="phase"></small></button>
   <div class="tafel chip"><small>St</small><span id="stufe">1</span><small id="ep">0/30</small></div>
   <div class="tafel chip"><i class="muenze"></i><span id="geld">0</span></div>
   <button id="aMinis" class="tafel chip"><small>Minis</small><span id="anzahl">1/2</span></button>
@@ -206,6 +261,27 @@ body:not(.innen) #innenLeiste,body.innen #aktionen{display:none}
     <div class="reihe"><button class="knopf" id="bZu">Schließen</button></div>
   </div>
 </div>
+<div id="banner" class="tafel" hidden role="status" aria-live="polite"><i></i><div><b></b><span></span></div></div>
+<div id="anleitung" hidden>
+  <div class="tafel" role="dialog" aria-labelledby="aTitel">
+    <div class="aKopf"><i id="aBild"></i><h2 id="aTitel"></h2></div>
+    <div id="aInhalt"><p id="aText"></p>
+    <ul id="aListe"></ul></div>
+    <div class="punkte" id="aPunkte"></div>
+    <div class="reihe"><button class="knopf" id="aZurueck">Zurück</button><button class="knopf" id="aWeiter">Weiter</button></div>
+    <button id="aWeg">Anleitung schließen</button>
+  </div>
+</div>
+<div id="titel">
+  <div class="logo" aria-label="Mini-Terrarium"><span>MINI</span><span>TERRARIUM</span></div>
+  <div class="minisReihe" aria-hidden="true"><i></i><i></i><i></i></div>
+  <p class="unter">Kleine Leben im Glaskasten</p>
+  <div class="titelReihe">
+    <button class="knopf" id="tStart">Spielen</button>
+    <button class="knopf klein" id="tAnleitung">Anleitung</button>
+  </div>
+  <p class="tippHinweis">Deine Minis warten schon</p>
+</div>
 <div id="nameDlg" hidden>
   <div class="tafel" role="dialog" aria-labelledby="nTitel">
     <h2 id="nTitel">Umbenennen</h2>
@@ -238,6 +314,108 @@ const animBild=bild(D.anim),figuren=D.chars.map(bild);
 const MINISKINS=[...Array(D.chars.length).keys()].filter(i=>i<6||i>8);
 const zufallSkin=()=>MINISKINS[Math.floor(Math.random()*MINISKINS.length)];
 const grenz=(v,a,b)=>Math.max(a,Math.min(b,v));
+// ---------- Spielgefühl: Klänge, Banner, Titelbild, Anleitung, Menü ----------
+// Klänge: kleine Rechteckwellen wie bei alten Konsolen, abschaltbar im Menü (gilt pro Gerät)
+var tonAn=true;try{tonAn=localStorage.getItem('miniTerrariumTon')!=='0'}catch(e){}
+var audio=null;
+function tonStart(){if(!tonAn)return;try{if(!audio)audio=new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume()}catch(e){audio=null}}
+var TOENE={muenze:[[988,.06],[1319,.14]],erfolg:[[523,.08],[659,.08],[784,.08],[1047,.24]],stufe:[[392,.07],[523,.07],[659,.07],[784,.07],[1047,.12],[1319,.3]],
+  gebiet:[[523,.1],[784,.1],[1047,.1],[1568,.32]],kauf:[[880,.05],[660,.09]]};
+function ton(art){
+  if(!tonAn)return;tonStart();if(!audio)return;
+  try{let t=audio.currentTime+.02;for(const [f,d] of TOENE[art]||[]){const o=audio.createOscillator(),g=audio.createGain();o.type='square';o.frequency.value=f;
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.04,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(audio.destination);o.start(t);o.stop(t+d+.03);t+=d*.85}}catch(e){}
+}
+document.addEventListener('touchend',tonStart,{once:true});document.addEventListener('mousedown',tonStart,{once:true});
+// Banner oben: Erfolge, Stufen, neue Gebiete; mehrere warten in einer Schlange
+var bannerListe=[],bannerAn=false;
+function feier(titel,text,bildName,art,fn){bannerListe.push({titel,text,bildName,art,fn});if(!bannerAn){bannerAn=true;setTimeout(bannerNaechster,60)}}
+function bannerNaechster(){
+  const b=bannerListe.shift(),el=$('banner');if(!b){bannerAn=false;return}
+  el.querySelector('b').textContent=b.titel;el.querySelector('span').textContent=b.text;el.dataset.art=b.art;
+  el.querySelector('i').style.backgroundImage=symbolBild[b.bildName]||'';el.onclick=b.fn?()=>{el.classList.remove('da');b.fn()}:null;
+  el.hidden=false;void el.offsetWidth;el.classList.add('da');ton(b.art);
+  setTimeout(()=>{el.classList.remove('da');setTimeout(()=>{el.hidden=true;bannerNaechster()},380)},b.art==='stufe'?4200:3200);
+}
+function neuAbStufe(s){ // was mit dieser Stufe neu dazukommt
+  const l=[];for(const j of JOBS)if(j.stufe===s)l.push(j.name);
+  for(const p of PARZ)if(p.stufe===s&&p.preis)l.push('Gebiet '+p.name);
+  for(const e of ESSEN)if((e.stufe||1)===s&&s>1)l.push(e.name.replace(' für alle',''));
+  for(const k in KAT)if(KAT[k].stufe===s)l.push(KAT[k].name);
+  return l.length?'Neu: '+l.slice(0,4).join(', ')+(l.length>4?' und mehr':''):'Weiter so! Erfahrung bringt dich zur nächsten Stufe.';
+}
+// Titelbild: läuft über dem lebenden Terrarium
+function titelZeigen(){
+  const t=$('titel');t.hidden=false;t.classList.remove('weg');
+  const skins=minis.map(m=>m.skin).concat([9,13,17]).slice(0,3);
+  t.querySelectorAll('.minisReihe i').forEach((el,i)=>{el.style.backgroundImage='url('+D.chars[skins[i]%D.chars.length]+')';el.style.animationDelay=(-i*.27)+'s'});
+}
+function titelWeg(){tonStart();const t=$('titel');t.classList.add('weg');setTimeout(()=>{t.hidden=true},450)}
+$('tStart').addEventListener('click',()=>{titelWeg();if(stand.anleitung!==1)setTimeout(()=>anleitungZeigen(0),350)});
+$('tAnleitung').addEventListener('click',()=>{titelWeg();setTimeout(()=>anleitungZeigen(0),350)});
+// Anleitung in Seiten
+const istApp=()=>!!navigator.standalone||!!(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+const imRahmen=()=>{try{return window.self!==window.top}catch(e){return true}};
+const geraet=()=>{const u=navigator.userAgent;return /iPhone|iPad|iPod/.test(u)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)?'ios':/Android/.test(u)?'android':'andere'};
+const WERTTEXT={int:'Büro: Akten, Tabellen, Programmieren, Projekte und Firma führen. Auch Kunden beraten.',cha:'Kasse, Pilze verkaufen, Telefondienst, Stammkunden und Kiosk führen.',
+  kra:'Einkaufswagen, Lieferungen schleppen, beim Bauen helfen und die Werkstatt leiten.',kre:'Farben mischen, Pilzpfanne braten, Rezepte erfinden und Plakate gestalten.',fle:'Regale einräumen, Flyer, Pilze putzen, Post verteilen und den Baumarkt führen.'};
+function anleitungSeiten(){
+  const l=[],g=geraet();
+  if(!istApp()&&!imRahmen()){
+    const ios=[['1. Teilen','Tippe in Safari auf das Teilen-Symbol (Quadrat mit Pfeil nach oben). Bei neueren iOS-Versionen erst auf „…“ und dann auf „Teilen“.'],['2. Home-Bildschirm','Wähle „Zum Home-Bildschirm“. Falls du es nicht siehst, scrolle in der Liste nach unten.'],['3. Hinzufügen','Tippe oben rechts auf „Hinzufügen“. Das Terrarium startet jetzt wie eine App.']];
+    const andr=[['1. Menü','Tippe in Chrome oben rechts auf die drei Punkte ⋮.'],['2. Installieren','Wähle „Zum Startbildschirm hinzufügen“ oder „App installieren“.'],['3. Bestätigen','Tippe auf „Hinzufügen“ bzw. „Installieren“. Das Symbol landet auf deinem Startbildschirm.']];
+    const liste=g==='ios'?ios:g==='android'?andr:[['iPhone/iPad','Safari → Teilen → „Zum Home-Bildschirm“ → Hinzufügen.'],['Android','Chrome → Menü ⋮ → „Zum Startbildschirm hinzufügen“ oder „App installieren“.']];
+    l.push({id:'app',titel:'Als App installieren',bild:'handy',text:'Am schönsten spielst du im Vollbild vom Home-Bildschirm aus. So geht’s'+(g==='ios'?' auf dem iPhone:':g==='android'?' auf Android:':':'),liste:liste.concat([['Wichtig','Der Spielstand liegt im Browser. Auf dem iPhone hat die App vom Home-Bildschirm einen eigenen Speicher. Installiere sie am besten gleich zu Beginn und spiele dann nur noch dort.']])});
+  }
+  l.push({id:'start',titel:'Willkommen im Mini-Terrarium!',bild:'herz',text:'Deine Minis leben in einem Glaskasten, und zwar in Echtzeit: Tag und Nacht, Sonnenaufgang und Jahreszeit richten sich nach deiner Uhr, das Wetter wechselt jeden Tag. Auch wenn das Spiel zu ist, geht das Leben weiter.',liste:[]});
+  l.push({id:'steuerung',titel:'So steuerst du',bild:'stern',text:'',liste:[['Tippen','Der ausgewählte Mini läuft dorthin.'],['Mini antippen','Wählt ihn aus. Noch einmal tippen heißt streicheln.'],['Wischen','Umsehen.'],['Zwei Finger','Hinein- und herauszoomen.'],['Häuser','Tippe auf den Wohnwagen, dann gehst du hinein und kannst die Möbel benutzen.'],['Oben links','Name antippen: das Mini-Fenster mit allen Werten klappt auf.']]});
+  l.push({id:'beduerfnisse',titel:'Bedürfnisse',bild:'essen',text:'Vier Balken zeigen, wie es deinem Mini geht. Rote Balken heißen: Bitte kümmern!',liste:[['Hunger','Apfel-Knopf: Essen hinlegen oder ein Buffet für alle aufbauen. Im Wohnwagen gibt es Kühlschrank und Herd.'],['Sauber','Tropfen-Knopf: duschen, im See baden oder in die Wanne.'],['Energie','Mond-Knopf oder nachts von selbst. Ausgebaute Häuser laden schneller.'],['Laune','Streicheln, Freunde, Spielzeug, Deko und Raritäten in der Nähe.'],['Achtung','Fallen Hunger oder Energie auf null, kann ein Mini umkippen und muss ins Krankenhaus.']]});
+  l.push({id:'werte',titel:'Die Werte',bild:'arbeit',text:'Jeder Mini hat fünf Werte von 1 bis 10. Jeder Job braucht einen Mindestwert, und jeder Punkt darüber bringt 10 % mehr Lohn. Werte steigen, wenn der Mini im passenden Job arbeitet.',
+    liste:WERTE.map(([k,kurz,lang])=>[kurz+' · '+lang,WERTTEXT[k]||'']).concat([['Eigenschaften','Dazu hat jeder Mini zwei Eigenschaften, zum Beispiel Sonnenkind, Nachteule oder Arbeitstier. Tippe sie im Mini-Fenster an, dann steht da, was sie bewirken.']])});
+  l.push({id:'arbeit',titel:'Arbeit und Münzen',bild:'arbeit',text:'',liste:[['Aktentasche','Laden wählen, Job wählen, Schichtlänge wählen. Lange Schichten bringen Zulagen bis +29 %.'],['Aufstieg','Wer oft im selben Laden arbeitet, wird Fachkraft, Profi und Leitung, verdient mehr und darf bessere Jobs.'],['Im Hintergrund','Schichten laufen weiter, wenn das Spiel zu ist. Der Lohn kommt danach von selbst.'],['Tagesplan','Klemmbrett: Essen, Schlafenszeiten und Schichten für jeden Tag festlegen.']]});
+  l.push({id:'welt',titel:'Einrichten und Gebiete',bild:'einrichten',text:'',liste:[['Sofa-Knopf','Lampen, Bänke, Pflanzen, Spielzeug und Raritäten kaufen. Aufgestelltes antippen, um es zu verschieben oder zu verkaufen.'],['Häuser','Im gleichen Menü baust du Häuser aus: schneller ausschlafen, bessere Laune.'],['Gebiete','Tippe auf ein verschwommenes Gebiet, um es freizuschalten. Neue Gebiete bringen Schlafplätze für weitere Minis.'],['Minis','Oben rechts unter „Minis“ ziehen neue Minis ein. Umziehen und Umbenennen geht im Mini-Fenster.']]});
+  l.push({id:'ziele',titel:'Ziele und Belohnungen',bild:'pokal',text:'',liste:[['Tag','Jeden Tag drei Aufgaben, alle drei zusammen geben einen Bonus. Wer mehrere Tage am Stück alles schafft, baut eine Serie auf.'],['Erfolge',ERFOLGE.length+' Erfolge mit Münzen als Belohnung. Abholen musst du sie selbst.'],['Stufen','Erfahrung bringt Stufen, und neue Stufen schalten Jobs, Essen, Spielzeug und Gebiete frei.']]});
+  l.push({id:'ende',titel:'Viel Spaß!',bild:'stern',text:'Das Menü öffnest du über die Uhr oben links. Dort findest du diese Anleitung jederzeit wieder, dazu die Töne und das Titelbild.',liste:[]});
+  return l;
+}
+var aSeiten=[],aSeite=0;
+function anleitungZeigen(was){
+  aSeiten=anleitungSeiten();aSeite=typeof was==='string'?Math.max(0,aSeiten.findIndex(s=>s.id===was)):was||0;
+  $('blatt').hidden=true;$('anleitung').hidden=false;anleitungMalen();
+}
+function anleitungMalen(){
+  const s=aSeiten[aSeite];$('aTitel').textContent=s.titel;$('aBild').style.backgroundImage=symbolBild[s.bild]||'';
+  $('aText').textContent=s.text;$('aText').hidden=!s.text;
+  const ul=$('aListe');ul.textContent='';ul.hidden=!s.liste.length;
+  for(const [b,t] of s.liste){const li=document.createElement('li'),x=document.createElement('b'),y=document.createElement('span');x.textContent=b;y.textContent=t;li.append(x,y);ul.append(li)}
+  const p=$('aPunkte');p.textContent='';aSeiten.forEach((_,i)=>{const d=document.createElement('i');if(i===aSeite)d.className='an';p.append(d)});
+  $('aZurueck').disabled=aSeite===0;$('aWeiter').textContent=aSeite===aSeiten.length-1?'Los geht’s!':'Weiter';
+  $('aInhalt').scrollTop=0;
+}
+function anleitungZu(){$('anleitung').hidden=true;if(stand.anleitung!==1){stand.anleitung=1;sichern()}}
+$('aZurueck').addEventListener('click',()=>{if(aSeite>0){aSeite--;anleitungMalen()}});
+$('aWeiter').addEventListener('click',()=>{if(aSeite<aSeiten.length-1){aSeite++;anleitungMalen()}else anleitungZu()});
+$('aWeg').addEventListener('click',anleitungZu);
+// Menü über die Uhr oben links
+function menuBlatt(){
+  const l=[{titel:'Anleitung',text:'Wie alles funktioniert und was die Werte bedeuten',knopf:'Lesen',fn:()=>anleitungZeigen('start')}];
+  if(!istApp()&&!imRahmen())l.push({titel:'Als App installieren',text:'So kommt das Terrarium auf den Home-Bildschirm',knopf:'Zeigen',fn:()=>anleitungZeigen('app')});
+  l.push({titel:'Töne',text:tonAn?'An: kleine Klänge bei Münzen, Erfolgen und Stufen':'Aus',knopf:tonAn?'Ausschalten':'Einschalten',fn:()=>{tonAn=!tonAn;try{localStorage.setItem('miniTerrariumTon',tonAn?'1':'0')}catch(e){}if(tonAn)ton('muenze');menuBlatt()}});
+  l.push({titel:'Titelbild',text:'Zurück zum Startbildschirm',knopf:'Zeigen',fn:titelZeigen});
+  if(stand.cheat)l.push({titel:'Zeit und Wetter',text:'Cheat: Tageszeit, Wetter und Jahreszeit zum Ausprobieren umschalten',knopf:'Öffnen',fn:testBlatt},
+    {titel:'Cheat ausschalten',text:'Zeit und Wetter wieder echt',knopf:'Aus',fn:()=>{stand.cheat=0;modus=0;testWetter=null;testJZ=null;sichern();sag('Der Cheat ist aus. Zeit und Wetter sind wieder echt.')}});
+  else l.push({titel:'Code eingeben',text:'Kennst du ein Geheimnis?',knopf:'Eingeben',fn:codeEingabe});
+  l.push({titel:'Neues Spiel',text:'Löscht den Spielstand und würfelt einen neuen ersten Mini',knopf:'Neu …',fn:()=>blatt('Wirklich neu anfangen?','Münzen, Minis, Freundschaften, Karrieren und die Serie gehen verloren. Das lässt sich nicht rückgängig machen.',[
+    {titel:'Spielstand löschen',text:'Danach startet das Spiel mit einem zufälligen Mini',knopf:'Ja, löschen',fn:()=>{nichtSichern=true;try{localStorage.removeItem('miniTerrarium1')}catch(e){}location.reload()}}])});
+  blatt('Menü','Mini-Terrarium · Stufe '+stand.stufe+' · '+minis.length+(minis.length===1?' Mini':' Minis')+' · '+muenzen(stand.geld)+' Münzen',l);
+}
+function codeEingabe(){
+  frage('Code eingeben','Kennst du einen geheimen Code? Groß- und Kleinschreibung ist egal.','',20,v=>{
+    const c=v.trim().toUpperCase();if(!c)return 'Bitte gib einen Code ein.';
+    if(c!=='ZEITREISE')return 'Dieser Code tut nichts.';
+    stand.cheat=1;sichern();setTimeout(()=>{feier('Cheat aktiv!','Zeit und Wetter findest du jetzt im Menü.','stern','erfolg');menuBlatt()},250);return '';
+  });
+}
 const zufall=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 
 // ---------- Stammdaten ----------
@@ -396,7 +574,7 @@ const wertName=k=>WERTE.find(w=>w[0]===k)[2];
 
 // ---------- Spielstand ----------
 let stand={geld:200,stufe:1,xp:0,frei:['A'],futter:[],zeit:0,minis:null,wahl:1,nr:1,angebot:null,freund:{},streit:{},liebe:{},tag:null,serie:{tage:0,letzter:'',best:0},festTag:''};
-try{const s=JSON.parse(localStorage.getItem('miniTerrarium1'));if(s&&s.frei)stand=Object.assign(stand,s)}catch(e){}
+let neuesSpiel=true;try{const s=JSON.parse(localStorage.getItem('miniTerrarium1'));if(s&&s.frei){stand=Object.assign(stand,s);neuesSpiel=false}}catch(e){}
 if(!stand.minis){ // erster Start oder alter Spielstand mit nur einem Mini
   stand.minis=stand.werte?[{id:1,name:'Mika',skin:0,tx:stand.mx||8,ty:stand.my||9,n:stand.n||{h:70,s:80,e:75,l:70},werte:stand.werte,job:stand.job||null,drin:!!stand.drin,heim:'haus'}]:[ersterMini()];
   for(const k of ['mx','my','n','werte','job','drin'])delete stand[k];
@@ -461,7 +639,7 @@ const bedarf=s=>s*s*30; // Erfahrung bis zur nächsten Stufe
 function ep(n,grund){
   stand.xp+=n;let neu=false;
   while(stand.xp>=bedarf(stand.stufe)){stand.stufe++;neu=true}
-  if(neu)sag('Stufe '+stand.stufe+' erreicht!');else if(grund)sag(grund+' +'+n+' EP');
+  if(neu)feier('Stufe '+stand.stufe+'!',neuAbStufe(stand.stufe),'stern','stufe');else if(grund)sag(grund+' +'+n+' EP');
   hud();return neu;
 }
 function plaetzeFrei(){ // freie Schlafplätze in freigeschalteten Parzellen
@@ -614,13 +792,12 @@ function wetterZeichnen(t){
 }
 const WETTERTON={normal:[1,1,1],sonne:[1,.985,.93],regen:[.72,.78,.88],nebel:[.9,.92,.95],schnee:[.88,.9,.97]};
 function testBlatt(){
-  blatt('Zeit und Wetter','Normal richtet sich alles nach Uhr und Datum deines Handys. Das Wetter ist ausgewürfelt, nicht das echte von draußen. Hier kannst du alles zum Ausprobieren umschalten.',[
+  blatt('Zeit und Wetter (Cheat)','Normal richtet sich alles nach Uhr und Datum deines Handys. Das Wetter ist ausgewürfelt, nicht das echte von draußen. Hier kannst du alles zum Ausprobieren umschalten.',[
     {titel:'Tageszeit',text:modus?phase(stunde())+' (Test)':'Echtzeit',knopf:'Weiter',fn:()=>{modus=(modus+1)%MODI.length;testBlatt()}},
     {titel:'Wetter',text:testWetter?WT[testWetter]+' (Test)':WT[wetter()]+' (nach Datum)',knopf:'Weiter',fn:()=>{const k=[null,'normal','sonne','regen','nebel','schnee'];testWetter=k[(k.indexOf(testWetter)+1)%k.length];testBlatt()}},
     {titel:'Jahreszeit',text:testJZ===null?JZ[jahreszeit()]+' (nach Datum)':JZ[testJZ]+' (Test)',knopf:'Weiter',fn:()=>{testJZ=testJZ===null?0:testJZ===3?null:testJZ+1;testBlatt()}},
     {titel:'Alles echt',text:'Zurück zu Uhr und Datum',knopf:'Zurück',fn:()=>{modus=0;testWetter=null;testJZ=null}},
-    {titel:'Neues Spiel',text:'Löscht den Spielstand und würfelt einen neuen ersten Mini',knopf:'Neu …',fn:()=>blatt('Wirklich neu anfangen?','Münzen, Minis, Freundschaften, Karrieren und die Serie gehen verloren. Das lässt sich nicht rückgängig machen.',[
-      {titel:'Spielstand löschen',text:'Danach startet das Spiel mit einem zufälligen Mini',knopf:'Ja, löschen',fn:()=>{nichtSichern=true;try{localStorage.removeItem('miniTerrarium1')}catch(e){}location.reload()}}])}]);
+  ]);
 }
 // ---------- Persönlichkeit ----------
 // Jeder Mini hat zwei Eigenarten; sie wirken auf Laune, Bedürfnisse, Arbeit und Gedanken
@@ -804,9 +981,9 @@ cv.addEventListener('wheel',e=>{e.preventDefault();setzeZoom(z*Math.exp(-e.delta
 let sagTimer=0;
 function sag(t){const h=$('hinweis');h.textContent=t;h.classList.remove('aus');clearTimeout(sagTimer);sagTimer=setTimeout(()=>h.classList.add('aus'),3500)}
 setTimeout(()=>$('hinweis').classList.add('aus'),9000);
-if(stand.oekonomie!==2){stand.oekonomie=2;setTimeout(()=>sag('Neue Löhne und Preise: Einsteiger verdienen jetzt etwa 56 Münzen pro Stunde (Mindestlohn), Chefs bis 200. Essen, Einrichtung, Minis und Gebiete kosten mehr.'),4000)}
+if(stand.oekonomie!==2){stand.oekonomie=2;if(!neuesSpiel)setTimeout(()=>sag('Neue Löhne und Preise: Einsteiger verdienen jetzt etwa 56 Münzen pro Stunde (Mindestlohn), Chefs bis 200. Essen, Einrichtung, Minis und Gebiete kosten mehr.'),4000)}
 setTimeout(()=>{if(!(stand.zahl&&stand.zahl.innen))sag('Neu: Tippe auf den Wohnwagen, dann schaust du hinein. Drinnen kannst du alles benutzen.')},10000);
-$('uhr').addEventListener('click',testBlatt);
+$('uhr').addEventListener('click',menuBlatt);
 let offen=false;try{offen=localStorage.getItem('miniTerrariumWerte')==='1'}catch(e){}
 function klappe(){$('bogen').hidden=!offen;$('klapp').setAttribute('aria-expanded',offen);$('klappPfeil').textContent=offen?'▾':'▸'}
 $('klapp').addEventListener('click',()=>{offen=!offen;klappe();try{localStorage.setItem('miniTerrariumWerte',offen?'1':'0')}catch(e){}});klappe();
@@ -814,7 +991,7 @@ function blaettern(d){const i=minis.indexOf(sel());waehle(minis[(i+d+minis.lengt
 $('vor').addEventListener('click',()=>blaettern(-1));$('nach').addEventListener('click',()=>blaettern(1));
 
 // ---------- Symbole der Knopfleiste: 16x16-Pixelraster, Umriss wird ergänzt ----------
-const SYMBOLE={"essen":["................",".........k......","........kK.gg...",".........KgGG...","....rrr..Krr....","...rhrrrrrrrr...","..rhhrrrrrrrrR..","..rhrrrrrrrrrR..","..rrrrrrrrrrrR..","..rrrrrrrrrrrR..","..rrrrrrrrrrRR..","...rrrrrrrrRR...","...RrrrrrrRRR...","....RRrrRRRR....",".....RR..RR.....","................"],"waschen":[".......b........",".......b........","......bbb.......","......bbb.....c.",".....bwbbb...c.c",".....bwbbb....c.","....bwbbbbb.....","....bwbbbbb.....","...bbbbbbbbb....","...bbbbbbbbB..c.","...bbbbbbbbB.c.c","...bbbbbbbBB..c.","....bbbbbBBB....",".....BBBBBB.....","................","................"],"schlafen":["................",".....yyyy.......","...yyyyy....ccc.","..yyyy........c.","..yyy........c..",".yyyy.......ccc.",".yyy............",".yyy.....cc.....",".yyyy.....c.....",".yyyy....cc.....","..yyyy.......Y..","..yyyyy....YY...","...yyyyyyyyY....","....YyyyyYY.....","......YYY.......","................"],"wecken":[".......y........",".......y........","..y.........y...","...y..yyy..y....",".....yyyyy......","....yyyyyyy.....","....yyyyyyy.....","yy..yyyyyyY..yy.","....yyyyyyY.....","....yyyyyYY.....",".....YyyYY......","...y..YYY..y....","..y.........y...",".......y........",".......y........","................"],"arbeit":["................","................",".....KKKKK......",".....K...K......","..kkkkkkkkkkk...","..kttttttttkk...","..ktttttttttk...","..ktttttttttk...","..kkkkkyykkkk...","..ktttkyykttk...","..ktttttttttk...","..ktttttttttk...","..kttttttttKk...","..kkkkkkkkkkk...","................","................"],"einrichten":["................","................","....mmmmmmmm....","...mmmmmmmmmm...","...mmmmmmmmmm...","...mmmmmmmmmm...",".mm.mmmmmmmm.mm.","mmmm........mmmm","mmmmmmmmmmmmmmmm","mmmmmmmmmmmmmmmm","MMMMMMMMMMMMMMMM",".MMMMMMMMMMMMMM.",".KK..........KK.",".KK..........KK.","................","................"],"plan":["................","......sSSs......","...kkksSSskkk...","...kppppppppk...","...kppppppppk...","...kpllpllllk...","...kppppppppk...","...kpllllplpk...","...kppppppppk...","...kplllpllpk...","...kppppppppk...","...kpllllpppk...","...kppppppppk...","...kkkkkkkkkk...","................","................"],"stopp":["................","................","..rr........rr..","..rrr......rrr..","...rrr....rrr...","....rrr..rrr....",".....rrrrrr.....","......rrrr......","......rrrr......",".....rrrrrr.....","....rrr..rrr....","...rrr....rrr...","..rrr......rrr..","..rr........rr..","................","................"]};
+const SYMBOLE={"pokal":["................", "..YyyyyyyyyyyY..", ".yYyyyyyyyyyyYy.", "y..yywyyyyyyY..y", "y..yywyyyyyyY..y", ".y.yywyyyyyyY.y.", "..yyywyyyyyyYy..", "....yyyyyyyY....", ".....yyyyyY.....", "......yyyY......", ".......yY.......", ".......yY.......", ".....YyyyyY.....", "....kkkkkkkk....", "....KKKKKKKK....", "................"],"stern":["................", ".......y........", "......yyY.......", "......yyY.......", ".....ywyyY......", "yyyyyywyyyyyyyY.", ".yyyyywyyyyyyY..", "..yyyyyyyyyyY...", "...yyyyyyyyY....", "...yyyyyyyyY....", "..yyyyyYyyyyY...", "..yyyY...yyyY...", ".yyY.......yyY..", ".yY.........yY..", "................", "................"],"fahne":["................", "...k............", "...krrrrrr......", "...krrrrrrrr....", "...krhrrrrrR....", "...krrrrrrR.....", "...kRRRRRR......", "...k............", "...k............", "...k............", "..gkgg..........", ".ggggggggg......", "gggggggggggg....", "GGGGGGGGGGGGGG..", "................", "................"],"handy":["................", ".....SSSSSS.....", "....SccccccS....", "....ScbbbbcS....", "....ScbccbcS....", "....ScbbbbcS....", "....ScbccbcS....", "....ScbbbbcS....", "....SccccccS....", "....SccccccS....", "....SccccccS....", "....SSSSSSSS....", "....SSSwwSSS....", "....SSSSSSSS....", "................", "................"],"herz":["................", "..rrr.....rrr...", ".rhhrr...rrrrr..", "rhhrrrr.rrrrrrR.", "rhrrrrrrrrrrrrR.", "rrrrrrrrrrrrrrR.", "rrrrrrrrrrrrrrR.", ".rrrrrrrrrrrrR..", "..rrrrrrrrrrR...", "...rrrrrrrrR....", "....rrrrrrR.....", ".....rrrrR......", "......rrR.......", ".......R........", "................", "................"],"essen":["................",".........k......","........kK.gg...",".........KgGG...","....rrr..Krr....","...rhrrrrrrrr...","..rhhrrrrrrrrR..","..rhrrrrrrrrrR..","..rrrrrrrrrrrR..","..rrrrrrrrrrrR..","..rrrrrrrrrrRR..","...rrrrrrrrRR...","...RrrrrrrRRR...","....RRrrRRRR....",".....RR..RR.....","................"],"waschen":[".......b........",".......b........","......bbb.......","......bbb.....c.",".....bwbbb...c.c",".....bwbbb....c.","....bwbbbbb.....","....bwbbbbb.....","...bbbbbbbbb....","...bbbbbbbbB..c.","...bbbbbbbbB.c.c","...bbbbbbbBB..c.","....bbbbbBBB....",".....BBBBBB.....","................","................"],"schlafen":["................",".....yyyy.......","...yyyyy....ccc.","..yyyy........c.","..yyy........c..",".yyyy.......ccc.",".yyy............",".yyy.....cc.....",".yyyy.....c.....",".yyyy....cc.....","..yyyy.......Y..","..yyyyy....YY...","...yyyyyyyyY....","....YyyyyYY.....","......YYY.......","................"],"wecken":[".......y........",".......y........","..y.........y...","...y..yyy..y....",".....yyyyy......","....yyyyyyy.....","....yyyyyyy.....","yy..yyyyyyY..yy.","....yyyyyyY.....","....yyyyyYY.....",".....YyyYY......","...y..YYY..y....","..y.........y...",".......y........",".......y........","................"],"arbeit":["................","................",".....KKKKK......",".....K...K......","..kkkkkkkkkkk...","..kttttttttkk...","..ktttttttttk...","..ktttttttttk...","..kkkkkyykkkk...","..ktttkyykttk...","..ktttttttttk...","..ktttttttttk...","..kttttttttKk...","..kkkkkkkkkkk...","................","................"],"einrichten":["................","................","....mmmmmmmm....","...mmmmmmmmmm...","...mmmmmmmmmm...","...mmmmmmmmmm...",".mm.mmmmmmmm.mm.","mmmm........mmmm","mmmmmmmmmmmmmmmm","mmmmmmmmmmmmmmmm","MMMMMMMMMMMMMMMM",".MMMMMMMMMMMMMM.",".KK..........KK.",".KK..........KK.","................","................"],"plan":["................","......sSSs......","...kkksSSskkk...","...kppppppppk...","...kppppppppk...","...kpllpllllk...","...kppppppppk...","...kpllllplpk...","...kppppppppk...","...kplllpllpk...","...kppppppppk...","...kpllllpppk...","...kppppppppk...","...kkkkkkkkkk...","................","................"],"stopp":["................","................","..rr........rr..","..rrr......rrr..","...rrr....rrr...","....rrr..rrr....",".....rrrrrr.....","......rrrr......","......rrrr......",".....rrrrrr.....","....rrr..rrr....","...rrr....rrr...","..rrr......rrr..","..rr........rr..","................","................"]};
 const SYMFARBE={"r":"#d63a30","R":"#962428","h":"#ffbeaa","g":"#5caa46","G":"#306e34","k":"#7a4a28","K":"#54301a","b":"#54a0e2","B":"#2c62aa","w":"#f0f8ff","c":"#96d2fa","y":"#fad246","Y":"#de9628","s":"#b0b0bc","S":"#6e6e7e","p":"#faf4e2","l":"#786e64","m":"#c44040","M":"#8c2830","t":"#e8b060"},SYMRAND='#2b1e18';
 const symbolBild={};
 for(const [n,z] of Object.entries(SYMBOLE)){
@@ -874,7 +1051,7 @@ function buffetPasst(e,x,y){
 }
 function buffetAufbauen(e,x,y){
   stand.geld-=e.preis;const f={x,y,t:e.id,rest:e.portionen,rufBis:Date.now()+180000};
-  stand.futter.push(f);sperreNeu();umleiten();zaehle('fuettern');zaehle('buffet');hud();sichern();rufeZumEssen(f);return f;
+  stand.futter.push(f);sperreNeu();umleiten();zaehle('fuettern');zaehle('buffet');if(e.id==='grill')zaehle('grill');hud();sichern();rufeZumEssen(f);return f;
 }
 function rufeZumEssen(f){ // wer gerade nur bummelt, schaut gleich vorbei
   for(const m of minis)if(!m.drin&&!m.fort&&!m.plan&&!m.akt&&m.pfad.length>1&&m.n.h<97)m.pfad=m.pfad.slice(0,1);
@@ -944,7 +1121,7 @@ function feierabend(m,bezahlt){
   const rVor=rangVon(m,j.ort)[1];m.karriere[j.ort]=(m.karriere[j.ort]||0)+(lang?1+Math.floor(min/120):1);const rNach=rangVon(m,j.ort)[1],hoch=rNach!==rVor;
   const mehr=Math.floor(m.werte[j.wert])>vor,neu=ep(5+Math.round(Math.min(min,480)/8)+(hoch?20:0));
   sag(m.name+' hat Feierabend'+(lang?' nach '+dauerName(min):'')+': +'+muenzen(lohn)+' Münzen'+(zuschlag(min)>=.05?' (Zuschlag +'+Math.round(zuschlag(min)*100)+' %)':'')+'.'+(hoch?' Befördert: jetzt '+rNach+' '+ORTE[j.ort].im+'!':'')+(mehr?' '+wertName(j.wert)+' steigt auf '+Math.floor(m.werte[j.wert])+'.':'')+(neu?' Stufe '+stand.stufe+' erreicht!':''));
-  zaehle('muenzen',lohn);zaehle('schichten');zaehle('ort_'+j.ort);if(team)zaehle('team');
+  zaehle('muenzen',lohn);zaehle('schichten');zaehle('ort_'+j.ort);if(team)zaehle('team');if(min>=480)zaehle('langschicht');if(j.id==='geschaeft')zaehle('firma');
   hud();sichern();
 }
 const kannArbeiten=(x,j)=>stand.stufe>=j.stufe&&Math.floor(x.werte[j.wert])>=j.min&&((x.karriere||{})[j.ort]||0)>=(j.erf||0)&&x.n.h>=25&&x.n.e>=25&&(x.n.s>=20||hat(x,'schmutzfink'));
@@ -1080,7 +1257,7 @@ function planPruefen(){
     for(const e of p.termine){if(!offen(e))continue;const spaet=jm-zeitMin(e.zeit);
       if(spaet>(e.was==='arbeit'?1440:WARTEN)){fertig(e,'Verpasst.');continue}
       const r=planTermin(m,e,zeitMin(e.zeit));
-      if(r.fertig){fertig(e,r.text);if(/^Fällt aus/.test(r.text))sag('Geplant für '+m.name+': '+r.text);continue}
+      if(r.fertig){fertig(e,r.text);if(!/^Fällt aus|^Verpasst/.test(r.text))zaehle('plan');if(/^Fällt aus/.test(r.text))sag('Geplant für '+m.name+': '+r.text);continue}
       const vor=S[e.id]&&S[e.id].tag===tag?S[e.id].text:'';
       if(spaet>=WARTEN){fertig(e,'Fällt aus: '+r.warte+'.');sag('Geplanter Termin fällt aus: '+r.warte+'.');continue}
       const text='Wartet: '+r.warte+'.';
@@ -1175,6 +1352,7 @@ function neuesAngebot(){
 const miniPreis=a=>{const s=a.summe||Object.values(a.werte).reduce((x,y)=>x+y,0);return Math.round((150+s*s*.9)*Math.pow(1.2,minis.length-1)/10)*10};
 // Umziehen: in ein Haus mit freiem Platz oder Platz tauschen
 function umziehen(m,h,tausch){
+  zaehle('umzug');
   const alt=heimVon(m),weg=x=>{if(schlaeftDrin(x))wecken(x)};
   weg(m);m.heim=h.id;if(tausch){weg(tausch);tausch.heim=alt.id}
   for(const x of tausch?[m,tausch]:[m])if(!x.fort&&!x.drin&&!x.akt){const t=heimVon(x).tuer;geheZu(x,t[0],t[1])}
@@ -1218,7 +1396,9 @@ $('dZu').addEventListener('click',()=>$('dialog').hidden=true);
 $('dialog').addEventListener('click',e=>{if(e.target===$('dialog'))$('dialog').hidden=true});
 $('dKauf').addEventListener('click',()=>{
   const p=dParz;if(!p||stand.geld<p.preis||stand.stufe<p.stufe||(p.vor&&!stand.frei.includes(p.vor)))return;
-  stand.geld-=p.preis;stand.frei.push(p.id);$('dialog').hidden=true;klemme();sichern();hud();sag(p.name+' ist freigeschaltet.');
+  stand.geld-=p.preis;stand.frei.push(p.id);$('dialog').hidden=true;
+  cam.x=(p.px+.5)*PW*T-vw/z/2;cam.y=(ROWS[p.py]+ROWS[p.py+1])/2*T-vh/z/2;klemme(); // zum neuen Gebiet schwenken
+  sichern();hud();feier('Neues Gebiet: '+p.name+'!',HEIME.some(h=>h.parz===p.id)?'Hier gibt es neue Schlafplätze für weitere Minis.':'Viel Spaß beim Erkunden!','fahne','gebiet');pruefeErfolge();
 });
 // ---------- Anzeige ----------
 function hud(){$('geld').textContent=muenzen(stand.geld);$('stufe').textContent=stand.stufe;$('ep').textContent=stand.xp+'/'+bedarf(stand.stufe);$('anzahl').textContent=minis.length+'/'+plaetzeGesamt();
@@ -1269,89 +1449,123 @@ const maxRang=()=>Math.max(0,...minis.map(m=>Math.max(...Object.keys(ORTE).map(o
 const maxFreund=()=>Math.max(0,...Object.values(stand.freund));
 const ERFOLGE=[
  // Erste Schritte
- {id:'laufen',gruppe:'Erste Schritte',name:'Erster Ausflug',text:'Schicke einen Mini irgendwohin',wert:()=>Z('laufen'),ziel:1,lohn:10},
- {id:'futter',gruppe:'Erste Schritte',name:'Guten Appetit',text:'Lege zum ersten Mal Essen hin',wert:()=>Z('fuettern'),ziel:1,lohn:10},
- {id:'wasch',gruppe:'Erste Schritte',name:'Frisch gewaschen',text:'Lass einen Mini waschen oder baden',wert:()=>Z('waschen'),ziel:1,lohn:10},
- {id:'schlaf',gruppe:'Erste Schritte',name:'Ausgeschlafen',text:'Ein Mini schläft sich richtig aus',wert:()=>Z('schlaf'),ziel:1,lohn:10},
- {id:'streichel',gruppe:'Erste Schritte',name:'Streicheleinheit',text:'Streichle einen Mini',wert:()=>Z('streicheln'),ziel:1,lohn:10},
- {id:'schicht',gruppe:'Erste Schritte',name:'Erster Arbeitstag',text:'Schließe die erste Schicht ab',wert:()=>Z('schichten'),ziel:1,lohn:15},
- {id:'einzug',gruppe:'Erste Schritte',name:'Zuwachs',text:'Ein zweiter Mini zieht ein',wert:()=>minis.length,ziel:2,lohn:20},
- {id:'kennen',gruppe:'Erste Schritte',name:'Hallo Nachbar',text:'Zwei Minis lernen sich kennen',wert:()=>Object.keys(stand.freund).length,ziel:1,lohn:15},
- {id:'gebiet',gruppe:'Erste Schritte',name:'Neuland',text:'Schalte das erste neue Gebiet frei',wert:()=>stand.frei.length-1,ziel:1,lohn:25},
- {id:'tag',gruppe:'Erste Schritte',name:'Tagwerk',text:'Schaffe eine Tagesaufgabe',wert:()=>Z('tagAufgabe'),ziel:1,lohn:15},
+ {id:'laufen',gruppe:'Erste Schritte',name:'Erster Ausflug',text:'Schicke einen Mini irgendwohin',wert:()=>Z('laufen'),ziel:1,lohn:50},
+ {id:'futter',gruppe:'Erste Schritte',name:'Guten Appetit',text:'Lege zum ersten Mal Essen hin',wert:()=>Z('fuettern'),ziel:1,lohn:50},
+ {id:'wasch',gruppe:'Erste Schritte',name:'Frisch gewaschen',text:'Lass einen Mini waschen oder baden',wert:()=>Z('waschen'),ziel:1,lohn:50},
+ {id:'schlaf',gruppe:'Erste Schritte',name:'Ausgeschlafen',text:'Ein Mini schläft sich richtig aus',wert:()=>Z('schlaf'),ziel:1,lohn:50},
+ {id:'streichel',gruppe:'Erste Schritte',name:'Streicheleinheit',text:'Streichle einen Mini',wert:()=>Z('streicheln'),ziel:1,lohn:50},
+ {id:'schicht',gruppe:'Erste Schritte',name:'Erster Arbeitstag',text:'Schließe die erste Schicht ab',wert:()=>Z('schichten'),ziel:1,lohn:75},
+ {id:'einzug',gruppe:'Erste Schritte',name:'Zuwachs',text:'Ein zweiter Mini zieht ein',wert:()=>minis.length,ziel:2,lohn:150},
+ {id:'kennen',gruppe:'Erste Schritte',name:'Hallo Nachbar',text:'Zwei Minis lernen sich kennen',wert:()=>Object.keys(stand.freund).length,ziel:1,lohn:75},
+ {id:'gebiet',gruppe:'Erste Schritte',name:'Neuland',text:'Schalte das erste neue Gebiet frei',wert:()=>stand.frei.length-1,ziel:1,lohn:150},
+ {id:'tag',gruppe:'Erste Schritte',name:'Tagwerk',text:'Schaffe eine Tagesaufgabe',wert:()=>Z('tagAufgabe'),ziel:1,lohn:75},
  // Essen und Pflege
- {id:'futter25',gruppe:'Essen und Pflege',name:'Futterspender',text:'Lege 25-mal Essen hin',wert:()=>Z('fuettern'),ziel:25,lohn:30},
- {id:'buffet',gruppe:'Essen und Pflege',name:'Picknickzeit',text:'Baue ein Essen für alle auf',wert:()=>Z('buffet'),ziel:1,lohn:20},
- {id:'leer',gruppe:'Essen und Pflege',name:'Bis auf den letzten Krümel',text:'Ein Buffet wird ganz leer gegessen',wert:()=>Z('leer'),ziel:1,lohn:30},
- {id:'wasch25',gruppe:'Essen und Pflege',name:'Sauberkeitsfan',text:'Lass 25-mal waschen oder baden',wert:()=>Z('waschen'),ziel:25,lohn:40},
- {id:'streichel50',gruppe:'Essen und Pflege',name:'Schmusekönig',text:'Streichle 50-mal',wert:()=>Z('streicheln'),ziel:50,lohn:40},
+ {id:'futter25',gruppe:'Essen und Pflege',name:'Futterspender',text:'Lege 25-mal Essen hin',wert:()=>Z('fuettern'),ziel:25,lohn:200},
+ {id:'buffet',gruppe:'Essen und Pflege',name:'Picknickzeit',text:'Baue ein Essen für alle auf',wert:()=>Z('buffet'),ziel:1,lohn:150},
+ {id:'leer',gruppe:'Essen und Pflege',name:'Bis auf den letzten Krümel',text:'Ein Buffet wird ganz leer gegessen',wert:()=>Z('leer'),ziel:1,lohn:200},
+ {id:'wasch25',gruppe:'Essen und Pflege',name:'Sauberkeitsfan',text:'Lass 25-mal waschen oder baden',wert:()=>Z('waschen'),ziel:25,lohn:250},
+ {id:'streichel50',gruppe:'Essen und Pflege',name:'Schmusekönig',text:'Streichle 50-mal',wert:()=>Z('streicheln'),ziel:50,lohn:250},
+ {id:'futter100',gruppe:'Essen und Pflege',name:'Gourmet-Küche',text:'Lege 100-mal Essen hin',wert:()=>Z('fuettern'),ziel:100,lohn:800},
+ {id:'grill',gruppe:'Essen und Pflege',name:'Grillmeister',text:'Baue ein Grillfest auf',wert:()=>Z('grill'),ziel:1,lohn:300},
  // Arbeit und Karriere
- {id:'schicht10',gruppe:'Arbeit und Karriere',name:'Fleißig',text:'Schließe 10 Schichten ab',wert:()=>Z('schichten'),ziel:10,lohn:30},
- {id:'schicht50',gruppe:'Arbeit und Karriere',name:'Arbeitstier',text:'Schließe 50 Schichten ab',wert:()=>Z('schichten'),ziel:50,lohn:80},
- {id:'schicht200',gruppe:'Arbeit und Karriere',name:'Unermüdlich',text:'Schließe 200 Schichten ab',wert:()=>Z('schichten'),ziel:200,lohn:200},
- {id:'rang3',gruppe:'Arbeit und Karriere',name:'Erste Beförderung',text:'Ein Mini wird Fachkraft',wert:()=>maxRang()>=3?1:0,ziel:1,lohn:30},
- {id:'rang10',gruppe:'Arbeit und Karriere',name:'Profi',text:'Ein Mini wird Profi',wert:()=>maxRang()>=10?1:0,ziel:1,lohn:60},
- {id:'rang25',gruppe:'Arbeit und Karriere',name:'Chefsessel',text:'Ein Mini übernimmt die Leitung eines Ladens',wert:()=>maxRang()>=25?1:0,ziel:1,lohn:150},
- {id:'allround',gruppe:'Arbeit und Karriere',name:'Allrounder',text:'Ein Mini hat in allen drei Läden gearbeitet',wert:()=>Math.max(0,...minis.map(m=>Object.keys(ORTE).filter(o=>(m.karriere||{})[o]>0).length)),ziel:3,lohn:40},
- {id:'team',gruppe:'Arbeit und Karriere',name:'Teamwork',text:'Beste Freunde arbeiten zusammen',wert:()=>Z('team'),ziel:1,lohn:40},
- {id:'lohn1k',gruppe:'Arbeit und Karriere',name:'Erster Tausender',text:'Verdiene 1.000 Münzen mit Arbeit',wert:()=>Z('muenzen'),ziel:1000,lohn:50},
- {id:'lohn10k',gruppe:'Arbeit und Karriere',name:'Großverdiener',text:'Verdiene 10.000 Münzen mit Arbeit',wert:()=>Z('muenzen'),ziel:10000,lohn:250},
+ {id:'schicht10',gruppe:'Arbeit und Karriere',name:'Fleißig',text:'Schließe 10 Schichten ab',wert:()=>Z('schichten'),ziel:10,lohn:200},
+ {id:'schicht50',gruppe:'Arbeit und Karriere',name:'Arbeitstier',text:'Schließe 50 Schichten ab',wert:()=>Z('schichten'),ziel:50,lohn:600},
+ {id:'schicht200',gruppe:'Arbeit und Karriere',name:'Unermüdlich',text:'Schließe 200 Schichten ab',wert:()=>Z('schichten'),ziel:200,lohn:2000},
+ {id:'rang3',gruppe:'Arbeit und Karriere',name:'Erste Beförderung',text:'Ein Mini wird Fachkraft',wert:()=>maxRang()>=3?1:0,ziel:1,lohn:200},
+ {id:'rang10',gruppe:'Arbeit und Karriere',name:'Profi',text:'Ein Mini wird Profi',wert:()=>maxRang()>=10?1:0,ziel:1,lohn:500},
+ {id:'rang25',gruppe:'Arbeit und Karriere',name:'Chefsessel',text:'Ein Mini übernimmt die Leitung eines Ladens',wert:()=>maxRang()>=25?1:0,ziel:1,lohn:1500},
+ {id:'allround',gruppe:'Arbeit und Karriere',name:'Allrounder',text:'Ein Mini hat in allen drei Läden gearbeitet',wert:()=>Math.max(0,...minis.map(m=>Object.keys(ORTE).filter(o=>(m.karriere||{})[o]>0).length)),ziel:3,lohn:300},
+ {id:'team',gruppe:'Arbeit und Karriere',name:'Teamwork',text:'Beste Freunde arbeiten zusammen',wert:()=>Z('team'),ziel:1,lohn:300},
+ {id:'lohn1k',gruppe:'Arbeit und Karriere',name:'Erster Tausender',text:'Verdiene 1.000 Münzen mit Arbeit',wert:()=>Z('muenzen'),ziel:1000,lohn:300},
+ {id:'lohn10k',gruppe:'Arbeit und Karriere',name:'Großverdiener',text:'Verdiene 10.000 Münzen mit Arbeit',wert:()=>Z('muenzen'),ziel:10000,lohn:1500},
+ {id:'lohn100k',gruppe:'Arbeit und Karriere',name:'Gutverdiener',text:'Verdiene 100.000 Münzen mit Arbeit',wert:()=>Z('muenzen'),ziel:100000,lohn:6000},
+ {id:'lohn1m',gruppe:'Arbeit und Karriere',name:'Münzmillionär',text:'Verdiene 1.000.000 Münzen mit Arbeit',wert:()=>Z('muenzen'),ziel:1000000,lohn:40000},
+ {id:'lang1',gruppe:'Arbeit und Karriere',name:'Nachtschicht',text:'Arbeite eine 8-Stunden-Schicht',wert:()=>Z('langschicht'),ziel:1,lohn:400},
+ {id:'lang25',gruppe:'Arbeit und Karriere',name:'Dauerbrenner',text:'Arbeite 25 Schichten zu 8 Stunden',wert:()=>Z('langschicht'),ziel:25,lohn:3000},
+ {id:'team10',gruppe:'Arbeit und Karriere',name:'Dreamteam',text:'Beste Freunde arbeiten 10-mal zusammen',wert:()=>Z('team'),ziel:10,lohn:1000},
+ {id:'wert10',gruppe:'Arbeit und Karriere',name:'Meisterhaft',text:'Ein Mini erreicht in einem Wert die 10',wert:()=>minis.some(m=>Object.values(m.werte).some(v=>v>=10))?1:0,ziel:1,lohn:2000},
+ {id:'firma',gruppe:'Arbeit und Karriere',name:'Firmenchef',text:'Ein Mini führt die Firma im Bürohaus',wert:()=>Z('firma'),ziel:1,lohn:3000},
  // Minis und Beziehungen
- {id:'wg',gruppe:'Minis und Beziehungen',name:'WG',text:'4 Minis wohnen hier',wert:()=>minis.length,ziel:4,lohn:40},
- {id:'voll',gruppe:'Minis und Beziehungen',name:'Volles Haus',text:'10 Minis wohnen hier',wert:()=>minis.length,ziel:10,lohn:150},
- {id:'freunde',gruppe:'Minis und Beziehungen',name:'Freundschaft',text:'Zwei Minis werden Freunde',wert:()=>maxFreund()>=60?1:0,ziel:1,lohn:25},
- {id:'beste',gruppe:'Minis und Beziehungen',name:'Beste Freunde',text:'Zwei Minis werden beste Freunde',wert:()=>maxFreund()>=90?1:0,ziel:1,lohn:50},
- {id:'verliebt',gruppe:'Minis und Beziehungen',name:'Es hat gefunkt',text:'Zwei Minis verlieben sich',wert:()=>Object.values(stand.liebe).some(v=>v>=1)||Z('flirt')?1:0,ziel:1,lohn:50},
- {id:'paar',gruppe:'Minis und Beziehungen',name:'Ein Paar',text:'Zwei Minis werden ein Paar',wert:()=>Object.values(stand.liebe).some(v=>v===2)||Z('antrag')?1:0,ziel:1,lohn:80},
- {id:'ewig',gruppe:'Minis und Beziehungen',name:'Unsterblich verliebt',text:'Ein Paar erreicht die höchste Stufe',wert:()=>Object.keys(stand.liebe).some(k=>stand.liebe[k]===2&&(stand.freund[k]||0)>=100)?1:0,ziel:1,lohn:150},
- {id:'versoehnt',gruppe:'Minis und Beziehungen',name:'Wieder gut',text:'Zwei Minis vertragen sich nach einem Streit',wert:()=>Z('versoehnung'),ziel:1,lohn:20},
- {id:'frieden',gruppe:'Minis und Beziehungen',name:'Waffenstillstand',text:'Zwei, die sich hassen, schließen Frieden',wert:()=>Z('frieden'),ziel:1,lohn:50},
+ {id:'wg',gruppe:'Minis und Beziehungen',name:'WG',text:'4 Minis wohnen hier',wert:()=>minis.length,ziel:4,lohn:300},
+ {id:'voll',gruppe:'Minis und Beziehungen',name:'Volles Haus',text:'10 Minis wohnen hier',wert:()=>minis.length,ziel:10,lohn:1500},
+ {id:'minis15',gruppe:'Minis und Beziehungen',name:'Volles Viertel',text:'15 Minis wohnen hier',wert:()=>minis.length,ziel:15,lohn:4000},
+ {id:'minis22',gruppe:'Minis und Beziehungen',name:'Ausgebucht',text:'22 Minis wohnen hier, jedes Bett ist belegt',wert:()=>minis.length,ziel:22,lohn:10000},
+ {id:'umzug',gruppe:'Minis und Beziehungen',name:'Umzugskarton',text:'Lass einen Mini umziehen',wert:()=>Z('umzug'),ziel:1,lohn:100},
+ {id:'umbenennen',gruppe:'Minis und Beziehungen',name:'Wie heißt du?',text:'Gib einem Mini einen neuen Namen',wert:()=>Z('umbenennen'),ziel:1,lohn:100},
+ {id:'freunde',gruppe:'Minis und Beziehungen',name:'Freundschaft',text:'Zwei Minis werden Freunde',wert:()=>maxFreund()>=60?1:0,ziel:1,lohn:150},
+ {id:'beste',gruppe:'Minis und Beziehungen',name:'Beste Freunde',text:'Zwei Minis werden beste Freunde',wert:()=>maxFreund()>=90?1:0,ziel:1,lohn:300},
+ {id:'verliebt',gruppe:'Minis und Beziehungen',name:'Es hat gefunkt',text:'Zwei Minis verlieben sich',wert:()=>Object.values(stand.liebe).some(v=>v>=1)||Z('flirt')?1:0,ziel:1,lohn:300},
+ {id:'paar',gruppe:'Minis und Beziehungen',name:'Ein Paar',text:'Zwei Minis werden ein Paar',wert:()=>Object.values(stand.liebe).some(v=>v===2)||Z('antrag')?1:0,ziel:1,lohn:500},
+ {id:'ewig',gruppe:'Minis und Beziehungen',name:'Unsterblich verliebt',text:'Ein Paar erreicht die höchste Stufe',wert:()=>Object.keys(stand.liebe).some(k=>stand.liebe[k]===2&&(stand.freund[k]||0)>=100)?1:0,ziel:1,lohn:1500},
+ {id:'versoehnt',gruppe:'Minis und Beziehungen',name:'Wieder gut',text:'Zwei Minis vertragen sich nach einem Streit',wert:()=>Z('versoehnung'),ziel:1,lohn:150},
+ {id:'frieden',gruppe:'Minis und Beziehungen',name:'Waffenstillstand',text:'Zwei, die sich hassen, schließen Frieden',wert:()=>Z('frieden'),ziel:1,lohn:400},
+ {id:'freunde5',gruppe:'Minis und Beziehungen',name:'Freundeskreis',text:'5 Freundschaften gleichzeitig',wert:()=>Object.values(stand.freund).filter(v=>v>=60).length,ziel:5,lohn:800},
+ {id:'paare3',gruppe:'Minis und Beziehungen',name:'Hochzeitsfieber',text:'3 Paare gleichzeitig',wert:()=>Object.values(stand.liebe).filter(v=>v===2).length,ziel:3,lohn:2500},
  // Einrichten und Spielen
- {id:'deko1',gruppe:'Einrichten und Spielen',name:'Einrichter',text:'Kaufe den ersten Gegenstand',wert:()=>Z('einrichten'),ziel:1,lohn:15},
- {id:'deko10',gruppe:'Einrichten und Spielen',name:'Innenarchitekt',text:'Kaufe 10 Gegenstände',wert:()=>Z('einrichten'),ziel:10,lohn:50},
- {id:'spiel1',gruppe:'Einrichten und Spielen',name:'Spielkind',text:'Ein Mini spielt zum ersten Mal',wert:()=>Z('spielen'),ziel:1,lohn:15},
- {id:'spielplatz',gruppe:'Einrichten und Spielen',name:'Spielplatz',text:'Stelle 4 verschiedene Spielgeräte auf',wert:()=>new Set(stand.deko.filter(d=>KAT[d.k].spiel).map(d=>d.k)).size,ziel:4,lohn:80},
+ {id:'deko1',gruppe:'Einrichten und Spielen',name:'Einrichter',text:'Kaufe den ersten Gegenstand',wert:()=>Z('einrichten'),ziel:1,lohn:75},
+ {id:'deko10',gruppe:'Einrichten und Spielen',name:'Innenarchitekt',text:'Kaufe 10 Gegenstände',wert:()=>Z('einrichten'),ziel:10,lohn:300},
+ {id:'spiel1',gruppe:'Einrichten und Spielen',name:'Spielkind',text:'Ein Mini spielt zum ersten Mal',wert:()=>Z('spielen'),ziel:1,lohn:75},
+ {id:'spielplatz',gruppe:'Einrichten und Spielen',name:'Spielplatz',text:'Stelle 4 verschiedene Spielgeräte auf',wert:()=>new Set(stand.deko.filter(d=>KAT[d.k].spiel).map(d=>d.k)).size,ziel:4,lohn:600},
+ {id:'deko25',gruppe:'Einrichten und Spielen',name:'Gartenarchitekt',text:'Kaufe 25 Gegenstände',wert:()=>Z('einrichten'),ziel:25,lohn:1200},
+ {id:'spiel9',gruppe:'Einrichten und Spielen',name:'Freizeitpark',text:'Stelle alle 9 Spielgeräte auf',wert:()=>new Set(stand.deko.filter(d=>KAT[d.k]&&KAT[d.k].gruppe==='spass').map(d=>d.k)).size,ziel:9,lohn:3000},
  // Fortschritt
- {id:'stufe5',gruppe:'Fortschritt',name:'Aufsteiger',text:'Erreiche Stufe 5',wert:()=>stand.stufe,ziel:5,lohn:50},
- {id:'stufe10',gruppe:'Fortschritt',name:'Alter Hase',text:'Erreiche Stufe 10',wert:()=>stand.stufe,ziel:10,lohn:150},
- {id:'alles',gruppe:'Fortschritt',name:'Großgrundbesitz',text:'Schalte alle Gebiete frei',wert:()=>stand.frei.length,ziel:PARZ.length,lohn:200},
- {id:'tag3',gruppe:'Fortschritt',name:'Alles im Griff',text:'Schaffe alle drei Tagesaufgaben an einem Tag',wert:()=>Z('tagAlle'),ziel:1,lohn:30},
- {id:'woche',gruppe:'Fortschritt',name:'Wochenserie',text:'7 Tage in Folge alle Tagesaufgaben',wert:()=>stand.serie.best||0,ziel:7,lohn:100},
- {id:'monat',gruppe:'Fortschritt',name:'Treue Seele',text:'30 Tage in Folge alle Tagesaufgaben',wert:()=>stand.serie.best||0,ziel:30,lohn:400},
+ {id:'stufe5',gruppe:'Fortschritt',name:'Aufsteiger',text:'Erreiche Stufe 5',wert:()=>stand.stufe,ziel:5,lohn:400},
+ {id:'stufe10',gruppe:'Fortschritt',name:'Alter Hase',text:'Erreiche Stufe 10',wert:()=>stand.stufe,ziel:10,lohn:2000},
+ {id:'stufe15',gruppe:'Fortschritt',name:'Urgestein',text:'Erreiche Stufe 15',wert:()=>stand.stufe,ziel:15,lohn:5000},
+ {id:'stufe20',gruppe:'Fortschritt',name:'Legende',text:'Erreiche Stufe 20',wert:()=>stand.stufe,ziel:20,lohn:10000},
+ {id:'alles',gruppe:'Fortschritt',name:'Großgrundbesitz',text:'Schalte alle Gebiete frei',wert:()=>stand.frei.length,ziel:PARZ.length,lohn:10000},
+ {id:'tag3',gruppe:'Fortschritt',name:'Alles im Griff',text:'Schaffe alle drei Tagesaufgaben an einem Tag',wert:()=>Z('tagAlle'),ziel:1,lohn:200},
+ {id:'woche',gruppe:'Fortschritt',name:'Wochenserie',text:'7 Tage in Folge alle Tagesaufgaben',wert:()=>stand.serie.best||0,ziel:7,lohn:1500},
+ {id:'monat',gruppe:'Fortschritt',name:'Treue Seele',text:'30 Tage in Folge alle Tagesaufgaben',wert:()=>stand.serie.best||0,ziel:30,lohn:8000},
+ {id:'spieltage7',gruppe:'Fortschritt',name:'Stammgast',text:'Spiele an 7 verschiedenen Tagen',wert:()=>Z('spieltage'),ziel:7,lohn:700},
+ {id:'spieltage30',gruppe:'Fortschritt',name:'Dauergast',text:'Spiele an 30 verschiedenen Tagen',wert:()=>Z('spieltage'),ziel:30,lohn:5000},
  // Besondere Momente
- {id:'schnuppe',gruppe:'Besondere Momente',name:'Wünsch dir was',text:'Sieh eine Sternschnuppe',wert:()=>Z('schnuppe'),ziel:1,lohn:25},
- {id:'post',gruppe:'Besondere Momente',name:'Post ist da',text:'Nimm ein Päckchen vom Postboten an',wert:()=>Z('post'),ziel:1,lohn:20},
- {id:'fest',gruppe:'Besondere Momente',name:'Lagerfeuer-Fest',text:'Erlebe ein Fest am Feuer',wert:()=>Z('fest'),ziel:1,lohn:30},
- {id:'regenbogen',gruppe:'Besondere Momente',name:'Regenbogen',text:'Erlebe einen Regenbogen',wert:()=>Z('regenbogen'),ziel:1,lohn:25},
- {id:'wetter',gruppe:'Besondere Momente',name:'Wetterfest',text:'Erlebe alle fünf Wetterlagen',wert:()=>Object.keys(stand.gesehen.w).length,ziel:5,lohn:60},
- {id:'jahr',gruppe:'Besondere Momente',name:'Ein ganzes Jahr',text:'Erlebe alle vier Jahreszeiten',wert:()=>Object.keys(stand.gesehen.j).length,ziel:4,lohn:300},
- {id:'ausbau1',gruppe:'Zuhause',name:'Frisch renoviert',text:'Baue ein Haus aus',wert:()=>Object.values(stand.ausbau).filter(v=>v>0).length,ziel:1,lohn:300},
- {id:'luxus',gruppe:'Zuhause',name:'Wie im Hotel',text:'Ein Haus erreicht die Stufe Luxus',wert:()=>Object.values(stand.ausbau).filter(v=>v>=3).length,ziel:1,lohn:3000},
- {id:'rar1',gruppe:'Zuhause',name:'Sammlerstück',text:'Kaufe eine Rarität',wert:()=>Z('rar'),ziel:1,lohn:500},
- {id:'rar5',gruppe:'Zuhause',name:'Kunstsammlung',text:'Stelle 5 verschiedene Raritäten auf',wert:()=>new Set(stand.deko.filter(d=>KAT[d.k]&&KAT[d.k].gruppe==='rar').map(d=>d.k)).size,ziel:5,lohn:5000},
- {id:'innen',gruppe:'Zuhause',name:'Hereinspaziert',text:'Schau in den Wohnwagen hinein',wert:()=>Z('innen'),ziel:1,lohn:15},
- {id:'sofa',gruppe:'Zuhause',name:'Couchpotato',text:'Fünfmal auf dem Sofa ausruhen',wert:()=>Z('sofa'),ziel:5,lohn:30},
- {id:'koch',gruppe:'Zuhause',name:'Sternekoch',text:'Zehnmal am Herd kochen',wert:()=>Z('kochen'),ziel:10,lohn:80}
+ {id:'schnuppe',gruppe:'Besondere Momente',name:'Wünsch dir was',text:'Sieh eine Sternschnuppe',wert:()=>Z('schnuppe'),ziel:1,lohn:200},
+ {id:'post',gruppe:'Besondere Momente',name:'Post ist da',text:'Nimm ein Päckchen vom Postboten an',wert:()=>Z('post'),ziel:1,lohn:100},
+ {id:'fest',gruppe:'Besondere Momente',name:'Lagerfeuer-Fest',text:'Erlebe ein Fest am Feuer',wert:()=>Z('fest'),ziel:1,lohn:300},
+ {id:'regenbogen',gruppe:'Besondere Momente',name:'Regenbogen',text:'Erlebe einen Regenbogen',wert:()=>Z('regenbogen'),ziel:1,lohn:200},
+ {id:'wetter',gruppe:'Besondere Momente',name:'Wetterfest',text:'Erlebe alle fünf Wetterlagen',wert:()=>Object.keys(stand.gesehen.w).length,ziel:5,lohn:600},
+ {id:'jahr',gruppe:'Besondere Momente',name:'Ein ganzes Jahr',text:'Erlebe alle vier Jahreszeiten',wert:()=>Object.keys(stand.gesehen.j).length,ziel:4,lohn:3000},
+ {id:'ausbau1',gruppe:'Zuhause',name:'Frisch renoviert',text:'Baue ein Haus aus',wert:()=>Object.values(stand.ausbau).filter(v=>v>0).length,ziel:1,lohn:1000},
+ {id:'luxus',gruppe:'Zuhause',name:'Wie im Hotel',text:'Ein Haus erreicht die Stufe Luxus',wert:()=>Object.values(stand.ausbau).filter(v=>v>=3).length,ziel:1,lohn:8000},
+ {id:'rar1',gruppe:'Zuhause',name:'Sammlerstück',text:'Kaufe eine Rarität',wert:()=>Z('rar'),ziel:1,lohn:1500},
+ {id:'rar5',gruppe:'Zuhause',name:'Kunstsammlung',text:'Stelle 5 verschiedene Raritäten auf',wert:()=>new Set(stand.deko.filter(d=>KAT[d.k]&&KAT[d.k].gruppe==='rar').map(d=>d.k)).size,ziel:5,lohn:15000},
+ {id:'innen',gruppe:'Zuhause',name:'Hereinspaziert',text:'Schau in den Wohnwagen hinein',wert:()=>Z('innen'),ziel:1,lohn:100},
+ {id:'sofa',gruppe:'Zuhause',name:'Couchpotato',text:'Fünfmal auf dem Sofa ausruhen',wert:()=>Z('sofa'),ziel:5,lohn:200},
+ {id:'koch',gruppe:'Zuhause',name:'Sternekoch',text:'Zehnmal am Herd kochen',wert:()=>Z('kochen'),ziel:10,lohn:600},
+ {id:'bad',gruppe:'Zuhause',name:'Badewannenkapitän',text:'Nimm 10 Bäder in der Wanne',wert:()=>Z('bad'),ziel:10,lohn:400},
+ {id:'plan1',gruppe:'Zuhause',name:'Gut organisiert',text:'Lass 10 geplante Termine ablaufen',wert:()=>Z('plan'),ziel:10,lohn:600},
+ {id:'ausbau3',gruppe:'Zuhause',name:'Bauherr',text:'Baue 3 Häuser aus',wert:()=>Object.values(stand.ausbau).filter(v=>v>0).length,ziel:3,lohn:4000},
+ {id:'leuchtturm',gruppe:'Zuhause',name:'Leuchtfeuer',text:'Stelle den Leuchtturm auf',wert:()=>stand.deko.some(d=>d.k==='leuchtturm')?1:0,ziel:1,lohn:5000},
+ // Gebiete
+ {id:'gB',gruppe:'Gebiete',name:'Ab ans Wasser',text:'Schalte das Seeufer frei',wert:()=>stand.frei.includes('B')?1:0,ziel:1,lohn:150},
+ {id:'gC',gruppe:'Gebiete',name:'Unter freiem Himmel',text:'Schalte den Zeltplatz frei',wert:()=>stand.frei.includes('C')?1:0,ziel:1,lohn:400},
+ {id:'gD',gruppe:'Gebiete',name:'Blütenmeer',text:'Schalte die Blumenwiese frei',wert:()=>stand.frei.includes('D')?1:0,ziel:1,lohn:1000},
+ {id:'gE',gruppe:'Gebiete',name:'Ab in die Stadt',text:'Schalte die Altstadt frei',wert:()=>stand.frei.includes('E')?1:0,ziel:1,lohn:1200},
+ {id:'gF',gruppe:'Gebiete',name:'Marktplatz',text:'Schalte die Marktstraße frei',wert:()=>stand.frei.includes('F')?1:0,ziel:1,lohn:1500},
+ {id:'gG',gruppe:'Gebiete',name:'Schatzsucher',text:'Schalte den Schrottplatz frei',wert:()=>stand.frei.includes('G')?1:0,ziel:1,lohn:5000},
+ {id:'gH',gruppe:'Gebiete',name:'Nachbarschaft',text:'Schalte die Wohnstraße frei',wert:()=>stand.frei.includes('H')?1:0,ziel:1,lohn:10000},
+ {id:'gI',gruppe:'Gebiete',name:'Fünf Sterne',text:'Schalte das Hotelviertel frei',wert:()=>stand.frei.includes('I')?1:0,ziel:1,lohn:20000}
 ];
 let erfolgWarte=0;
 function pruefeErfolge(){
   stand.gesehen.w[wetterEcht()]=1;stand.gesehen.j[jahreszeitEcht()]=1; // nur echtes Wetter zählt, nicht der Testmodus
   const neu=ERFOLGE.filter(e=>!stand.erfolge[e.id]&&e.wert()>=e.ziel);if(!neu.length)return;
   for(const e of neu)stand.erfolge[e.id]=1;
-  const text=neu.length===1?'Erfolg: „'+neu[0].name+'“! Hol dir '+neu[0].lohn+' Münzen unter „Erfolge“ ab.':neu.length+' Erfolge geschafft! Die Münzen warten unter „Erfolge“.';
-  const jetzt=performance.now(),w=Math.max(0,erfolgWarte-jetzt);erfolgWarte=jetzt+w+3000;setTimeout(()=>sag(text),w+1200);
+  if(neu.length<=3)for(const e of neu)feier('Erfolg: '+e.name,e.text+' · +'+muenzen(e.lohn)+' Münzen, tippe zum Abholen','pokal','erfolg',erfolgBlatt);
+  else feier(neu.length+' Erfolge geschafft!','Zusammen '+muenzen(neu.reduce((a,e)=>a+e.lohn,0))+' Münzen, tippe zum Abholen','pokal','erfolg',erfolgBlatt);
   hud();sichern();
 }
 function erfolgBlatt(){
   const bereit=ERFOLGE.filter(e=>stand.erfolge[e.id]===1),geschafft=ERFOLGE.filter(e=>stand.erfolge[e.id]).length,posten=[];
-  if(bereit.length>1){const summe=bereit.reduce((a,e)=>a+e.lohn,0);posten.push({titel:'Alle abholen',text:bereit.length+' Erfolge · '+summe+' Münzen',knopf:'Abholen',fn:()=>{for(const e of bereit)stand.erfolge[e.id]=2;auszahlen(summe,bereit.length*3);sag('Abgeholt: +'+summe+' Münzen.');erfolgBlatt()}})}
+  if(bereit.length>1){const summe=bereit.reduce((a,e)=>a+e.lohn,0);posten.push({titel:'Alle abholen',text:bereit.length+' Erfolge · '+muenzen(summe)+' Münzen',knopf:'Abholen',fn:()=>{for(const e of bereit)stand.erfolge[e.id]=2;auszahlen(summe,bereit.length*3);sag('Abgeholt: +'+summe+' Münzen.');erfolgBlatt()}})}
   let gruppe='';
   for(const e of ERFOLGE){
     if(e.gruppe!==gruppe){gruppe=e.gruppe;const l=ERFOLGE.filter(x=>x.gruppe===gruppe);posten.push({kopf:true,titel:gruppe+' · '+l.filter(x=>stand.erfolge[x.id]).length+'/'+l.length})}
     const s=stand.erfolge[e.id],w=Math.min(e.wert(),e.ziel);
-    if(s===1)posten.push({titel:e.name,text:'Geschafft! '+e.text+' · '+e.lohn+' Münzen',knopf:'Abholen',fn:()=>{stand.erfolge[e.id]=2;auszahlen(e.lohn,3);erfolgBlatt()}});
+    if(s===1)posten.push({titel:e.name,text:'Geschafft! '+e.text+' · '+muenzen(e.lohn)+' Münzen',knopf:'Abholen',fn:()=>{stand.erfolge[e.id]=2;auszahlen(e.lohn,3);erfolgBlatt()}});
     else if(s===2)posten.push({titel:e.name,text:e.text+' · abgeholt',erledigt:true});
-    else posten.push({titel:e.name,text:e.text+(e.ziel>1?' · '+w+' von '+e.ziel:'')+' · '+e.lohn+' Münzen'});
+    else posten.push({titel:e.name,text:e.text+(e.ziel>1?' · '+w+' von '+e.ziel:'')+' · '+muenzen(e.lohn)+' Münzen'});
   }
   blatt('Erfolge',geschafft+' von '+ERFOLGE.length+' geschafft. Für jeden Erfolg gibt es Münzen, die du hier selbst abholst.',posten);
 }
@@ -1366,7 +1580,7 @@ function neueAufgaben(){ // drei Aufgaben, für denselben Tag immer dieselben
   const d=new Date(),basis=d.getFullYear()*372+d.getMonth()*31+d.getDate(),pool=AUFGABEN.filter(a=>!a.wenn||a.wenn()),l=[];
   for(let i=0;l.length<3&&i<60;i++){const a=pool[Math.floor(zufall01(basis*17+i*101)*pool.length)%pool.length];
     if(!l.some(x=>x.typ===a.typ)&&!(a.typ.startsWith('ort_')&&l.some(x=>x.typ.startsWith('ort_')))){const ziel=a.n();l.push({typ:a.typ,ziel,ist:0,fertig:false,lohn:a.lohn(ziel)})}}
-  stand.tag={datum:heute(),aufgaben:l,bonus:false};
+  stand.tag={datum:heute(),aufgaben:l,bonus:false};if(stand.zahl)stand.zahl.spieltage=(stand.zahl.spieltage||0)+1; // ein neuer Spieltag
   if(stand.serie.letzter!==gestern()&&stand.serie.letzter!==heute())stand.serie.tage=0; // Serie gerissen
 }
 function zaehle(typ,n){
@@ -1388,7 +1602,7 @@ function zaehle(typ,n){
 }
 // Münzen gutschreiben, mit kleinem „+X“, das aus dem Münzstand aufsteigt
 function auszahlen(lohn,epN){
-  stand.geld+=lohn;if(epN)ep(epN);hud();sichern();
+  ton('muenze');stand.geld+=lohn;if(epN)ep(epN);hud();sichern();
   const r=$('geld').getBoundingClientRect(),f=document.createElement('div');f.className='muenzflug';f.textContent='+'+lohn;
   f.style.left=Math.round(r.left)+'px';f.style.top=Math.round(r.bottom+4)+'px';document.body.append(f);setTimeout(()=>f.remove(),1500);
 }
@@ -1578,7 +1792,7 @@ $('bauA').addEventListener('click',()=>{
   const e=KAT[bau.k];
   if(bau.d){const d=bau.d;d.x=bau.x;d.y=bau.y;d.weg=false;zaehle('verschieben');sag(e.name+' steht jetzt am neuen Platz.')}
   else{if(stand.geld<e.preis){bauLeiste();return}
-    stand.geld-=e.preis;stand.dekoNr=(stand.dekoNr||stand.deko.length)+1;stand.deko.push({id:stand.dekoNr,k:bau.k,x:bau.x,y:bau.y,bezahlt:e.preis});if(e.gruppe==='rar')zaehle('rar');
+    stand.geld-=e.preis;stand.dekoNr=(stand.dekoNr||stand.deko.length)+1;stand.deko.push({id:stand.dekoNr,k:bau.k,x:bau.x,y:bau.y,bezahlt:e.preis});ton('kauf');if(e.gruppe==='rar')zaehle('rar');
     sag(e.name+' steht.'+(e.spiel?' Die Minis spielen damit, wenn sie Lust haben. Oder tippe es an, dann spielt dein Mini.':e.licht?' Nachts leuchtet es.':e.schoen?' Das macht es gemütlicher.':''));zaehle('einrichten')}
   sperreNeu();umleiten();hud();sichern();bau={modus:'wahl'};bauLeiste();
 });
@@ -2311,7 +2525,7 @@ function raumAnkunft(m){
   if(!o){r.richt=3;return}
   r.richt=o.richt;
   if(o.art==='bett'){m.grund=bettzeit(m,stunde())?'nacht':'schlaf';r.bett=z.o;r.akt=null;m.wachBis=0;sichern();return}
-  if(o.art==='wanne'){m.grund='dusche';r.bad=z.o;m.akt={typ:'dusche',t:6};return}
+  if(o.art==='wanne'){zaehle('bad');m.grund='dusche';r.bad=z.o;m.akt={typ:'dusche',t:6};return}
   if(o.art==='kuehlschrank'){
     if(stand.geld<SNACK){r.ruf='Leer …';r.rufT=2.5;sag('Für einen Snack aus dem Kühlschrank fehlen Münzen ('+SNACK+').');r.wart=3;return}
     stand.geld-=SNACK;hud();r.akt={typ:'snack',t:3.2,o:z.o};return}
@@ -2471,19 +2685,21 @@ function ausbauBlatt(nur){
 }
 $('umzug').addEventListener('click',()=>umzugBlatt(sel()));
 // Umbenennen: eigenes kleines Fenster mit Eingabefeld (prompt() ist in eingebetteten Seiten oft gesperrt)
-let nameMini=null;
-function umbenennen(m){nameMini=m;$('nText').textContent='Wie soll '+m.name+' heißen? Höchstens 14 Zeichen.';$('nFeld').value=m.name;$('nFehler').textContent='';$('nameDlg').hidden=false;setTimeout(()=>{$('nFeld').focus();$('nFeld').select()},60)}
-function nameSpeichern(){
-  const m=nameMini;if(!m)return;const n=$('nFeld').value.replace(/\s+/g,' ').trim();
-  const f=!n?'Bitte gib einen Namen ein.':n.length>14?'Der Name ist zu lang.':minis.some(x=>x!==m&&x.name.toLowerCase()===n.toLowerCase())?'So heißt schon ein anderer Mini.':'';
-  if(f){$('nFehler').textContent=f;return}
-  const alt=m.name;nameMini=null;$('nameDlg').hidden=true;$('nFeld').blur();if(alt===n)return;
-  m.name=n;balken();sichern();sag(alt+' heißt jetzt '+n+'.');
+let frageFn=null;
+function frage(titel,text,wert,max,fn){frageFn=fn;$('nTitel').textContent=titel;$('nText').textContent=text;const f=$('nFeld');f.value=wert;f.maxLength=max;$('nFehler').textContent='';$('blatt').hidden=true;$('nameDlg').hidden=false;setTimeout(()=>{f.focus();f.select()},60)}
+function frageOk(){if(!frageFn)return;const fehler=frageFn($('nFeld').value);if(fehler){$('nFehler').textContent=fehler;return}frageFn=null;$('nameDlg').hidden=true;$('nFeld').blur()}
+function umbenennen(m){
+  frage('Umbenennen','Wie soll '+m.name+' heißen? Höchstens 14 Zeichen.',m.name,14,v=>{
+    const n=v.replace(/\s+/g,' ').trim();
+    const f=!n?'Bitte gib einen Namen ein.':n.length>14?'Der Name ist zu lang.':minis.some(x=>x!==m&&x.name.toLowerCase()===n.toLowerCase())?'So heißt schon ein anderer Mini.':'';
+    if(f)return f;if(n!==m.name){const alt=m.name;m.name=n;zaehle('umbenennen');balken();sichern();sag(alt+' heißt jetzt '+n+'.')}return '';
+  });
 }
 $('umbenennen').addEventListener('click',()=>umbenennen(sel()));
-$('nOk').addEventListener('click',nameSpeichern);
-$('nZu').addEventListener('click',()=>{nameMini=null;$('nameDlg').hidden=true;$('nFeld').blur()});
-$('nFeld').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();nameSpeichern()}});
+$('nOk').addEventListener('click',frageOk);
+$('nZu').addEventListener('click',()=>{frageFn=null;$('nameDlg').hidden=true;$('nFeld').blur()});
+$('nFeld').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();frageOk()}});
+$('werte').addEventListener('click',()=>anleitungZeigen('werte'));
 $('innenAusbau').addEventListener('click',()=>ausbauBlatt(innen&&innen.id));
 function innenZu(){if(!innen)return;const a=innen.alt;innen=null;z=a.z;cam.x=a.x;cam.y=a.y;klemme();document.body.classList.remove('innen');$('hinweis').classList.add('aus')}
 $('innenRaus').addEventListener('click',innenZu);
@@ -2671,7 +2887,7 @@ function nachholen(dt){
 function runde(ms){const t=ms/1000,dt=Math.min(.1,t-zuletzt);zuletzt=t;nachholen(Math.max(0,dt));
   if(gleit){const ax=cam.x,ay=cam.y;cam.x+=gleit.vx*dt;cam.y+=gleit.vy*dt;klemme();const b=Math.pow(.998,dt*1000);gleit.vx*=b;gleit.vy*=b;
     if(cam.x===ax)gleit.vx=0;if(cam.y===ay)gleit.vy=0;if(Math.hypot(gleit.vx,gleit.vy)*z<12)gleit=null}schritt(dt);zeichne(t);requestAnimationFrame(runde)}
-groesse();hud();balken();
+groesse();hud();balken();titelZeigen();
 $('hinweis').textContent=$('hinweis').textContent.replace('dein Mini',sel().name);
 cam.x=sel().x-vw/z/2;cam.y=sel().y-vh/z/2;klemme();
 addEventListener('pagehide',sichern);document.addEventListener('visibilitychange',()=>{if(document.hidden)sichern();else planPruefen()});
