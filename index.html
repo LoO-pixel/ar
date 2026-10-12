@@ -21,13 +21,15 @@ body{margin:0;font-size:14px;-webkit-tap-highlight-color:transparent;-webkit-tou
 /* Layout: Vollbild-Canvas als Terrarium, HUD oben und Hinweis unten als Holztafeln */
 :root{
   --nacht:#1b2433; --holz:#5b3a21; --papier:#fff1d6; --tinte:#3b2414; --gold:#e0a21b; --gras:#4a9a55; --rot:#b8442f; --satt:#d98a1e; --sauber:#3d8fb8; --wach:#4a9a55; --froh:#c4517a;
+  /* --luecke: iOS-Web-App mit durchscheinender Statusleiste meldet die Höhe ohne Statusleiste; per Skript gesetzt */
+  --luecke:0px; --unten:calc(env(safe-area-inset-bottom,0px) - var(--luecke));
   --pixel:"Ziffern","Pixelify Sans","Courier New",monospace;
   color-scheme:dark;
 }
 html,body{height:100%}
 [hidden]{display:none!important}
 body{background:var(--nacht);color:var(--tinte);font-family:var(--pixel);overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
-canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none;image-rendering:pixelated;display:block}
+canvas{position:fixed;inset:0;width:100%;height:calc(100% + var(--luecke));bottom:auto;touch-action:none;image-rendering:pixelated;display:block}
 .tafel{border:12px solid transparent;border-image:var(--ui1) 10 fill / 12px stretch;image-rendering:pixelated;color:var(--tinte)}
 #hud{position:fixed;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top,0px) + 6px) 16px 0;display:flex;gap:4px;justify-content:space-between;align-items:flex-start;pointer-events:none}
 .chip{border:7px solid transparent;border-image:var(--ui1) 10 fill / 7px stretch;display:flex;align-items:baseline;gap:4px;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;background:none;padding:0 1px}
@@ -39,15 +41,15 @@ canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none;image-ren
 .wert small{font-size:12px;font-weight:400;letter-spacing:.04em;text-transform:uppercase;opacity:.75}
 button{font:inherit;color:inherit;cursor:pointer}
 #uhr:focus-visible,.knopf:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
-#hinweis{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 60px);margin:0 auto;max-width:380px;display:block;white-space:normal;text-align:center;font-size:12px;font-weight:400;line-height:1.3;pointer-events:none;transition:opacity .4s}
+#hinweis{position:fixed;left:16px;right:16px;bottom:calc(var(--unten) + 60px);margin:0 auto;max-width:380px;display:block;white-space:normal;text-align:center;font-size:12px;font-weight:400;line-height:1.3;pointer-events:none;transition:opacity .4s}
 #hinweis.aus{opacity:0}
-#bauLeiste{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 6px);margin:0 auto;max-width:420px;padding:2px 4px}
+#bauLeiste{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(var(--unten) + 6px);margin:0 auto;max-width:420px;padding:2px 4px}
 #bauLeiste p{margin:0;font-size:13px;line-height:1.3}
 #bauLeiste b{font-weight:600}
 #bauLeiste .gut{color:var(--gras);font-weight:600}
 #bauLeiste .fehlt{font-weight:600}
 #bauLeiste .knopf{font-size:14px;padding:2px 4px}
-body.bauen #hinweis{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
+body.bauen #hinweis{bottom:calc(var(--unten) + 150px)}
 .pfeil{background:none;border:0;font-size:15px;line-height:1;padding:0 6px;font-weight:600}
 .pfeil:focus-visible{outline:3px solid var(--gold)}
 #status{position:fixed;left:16px;top:calc(env(safe-area-inset-top,0px) + 40px);display:grid;gap:4px;font-size:12px;font-weight:400;white-space:normal}
@@ -64,7 +66,15 @@ body.bauen #hinweis{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
 #gedanke{font-size:11px;line-height:1.3;font-style:italic;margin-top:4px}
 #gedanke:empty{display:none}
 #art{background:none;border:0;padding:0;text-align:left;font-weight:600}
-#umzug{background:none;border:0;padding:0;text-align:left;font-size:11px;font-weight:600;text-decoration:underline;justify-self:start}
+#umzug,#umbenennen{background:none;border:0;padding:0;text-align:left;font-size:11px;font-weight:600;text-decoration:underline}
+.links{display:flex;gap:12px;flex-wrap:wrap}
+#nameDlg{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,14,22,.55)}
+#nameDlg .tafel{width:min(320px,100%);display:flex;flex-direction:column;gap:10px;padding:6px}
+#nameDlg h2{margin:0;font-size:24px;font-weight:600}
+#nameDlg p{margin:0;font-size:15px;line-height:1.35}
+#nameDlg p:empty{display:none}
+#nFeld{font:600 18px var(--pixel);color:var(--tinte);background:#fff8e6;border:2px solid var(--holz);border-radius:0;padding:6px 8px;min-height:40px;width:100%;box-sizing:border-box;-webkit-user-select:text;user-select:text}
+#nFeld:focus-visible{outline:3px solid var(--gold)}
 #karr:empty{display:none}
 #aTag{position:fixed;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 40px)}
 #aErfolg{position:fixed;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 74px)}
@@ -103,7 +113,7 @@ body.bauen #hinweis{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
 .posten span{font-size:13px;line-height:1.3;grid-column:1}
 .posten .knopf{grid-column:2;grid-row:1 / span 2;flex:none;min-width:84px;font-size:14px}
 .posten .fehlt{font-weight:600}
-#aktionen{position:fixed;left:0;right:0;bottom:0;padding:0 16px calc(env(safe-area-inset-bottom,0px) + 6px);display:flex;gap:4px;justify-content:center}
+#aktionen{position:fixed;left:0;right:0;bottom:calc(0px - var(--luecke));padding:0 16px calc(env(safe-area-inset-bottom,0px) + 6px);display:flex;gap:4px;justify-content:center}
 #aktionen .knopf{flex:none;width:48px;height:48px;padding:0;border-width:7px;border-image-width:7px;display:grid;place-items:center}
 #aktionen .knopf i{display:block;width:32px;height:32px;background-size:32px 32px;background-repeat:no-repeat;image-rendering:pixelated}
 #aktionen{gap:6px}
@@ -122,20 +132,21 @@ body.bauen #hinweis{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
 #status{left:max(16px,env(safe-area-inset-left,0px))}
 /* Querformat auf dem Handy: Knöpfe als Spalte rechts, damit unten nichts die Welt verdeckt */
 @media (orientation:landscape) and (max-height:520px){
-  #aktionen{left:auto;top:auto;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 6px);padding:0;display:grid;grid-template-columns:repeat(2,48px)}
+  #aktionen{left:auto;top:auto;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(var(--unten) + 6px);padding:0;display:grid;grid-template-columns:repeat(2,48px)}
   #aktionen .knopf{flex:none;width:48px;height:48px;max-width:none}
-  #hinweis{bottom:calc(env(safe-area-inset-bottom,0px) + 6px);right:136px;left:max(16px,env(safe-area-inset-left,0px));max-width:420px}
+  #hinweis{bottom:calc(var(--unten) + 6px);right:136px;left:max(16px,env(safe-area-inset-left,0px));max-width:420px}
   #bogen{grid-template-columns:1fr;max-height:calc(100vh - 110px);overflow-y:auto}
   #bauLeiste{left:auto;width:330px}
   #aKlinik{right:calc(max(16px,env(safe-area-inset-right,0px)) + 124px);top:calc(env(safe-area-inset-top,0px) + 74px)}
-  body.bauen #hinweis{bottom:calc(env(safe-area-inset-bottom,0px) + 6px);right:370px}
+  body.bauen #hinweis{bottom:calc(var(--unten) + 6px);right:370px}
 }
 /* Innenraum: statt der Knopfleiste nur der Ausgang */
-#innenLeiste{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 6px);display:flex;align-items:center;gap:10px;font-size:15px;padding:0 0 0 6px}
+#innenLeiste{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--unten) + 6px);display:flex;align-items:center;gap:10px;font-size:15px;padding:0 0 0 6px}
 #innenLeiste .knopf{flex:none;font-size:15px;padding:2px 10px}
 body:not(.innen) #innenLeiste,body.innen #aktionen{display:none}
 @media (orientation:landscape) and (max-height:520px){#innenLeiste{left:auto;transform:none;right:max(16px,env(safe-area-inset-right,0px));flex-direction:column;gap:6px;padding:4px 2px}}
 @media (prefers-reduced-motion:reduce){#hinweis{transition:none}.chip.abholen{animation:none}}
+#blatt,#plan,#dialog,#nameDlg{bottom:calc(0px - var(--luecke))}
 </style>
 </head>
 <body>
@@ -157,7 +168,7 @@ body:not(.innen) #innenLeiste,body.innen #aktionen{display:none}
     <button id="art"></button>
     <div id="karr"></div>
     <div id="lage"></div>
-    <button id="umzug">Umziehen ›</button>
+    <div class="links"><button id="umzug">Umziehen ›</button><button id="umbenennen">Umbenennen ›</button></div>
     <div id="gedanke"></div>
     <div id="freunde"></div>
   </div>
@@ -193,6 +204,15 @@ body:not(.innen) #innenLeiste,body.innen #aktionen{display:none}
     <p id="bText"></p>
     <div id="bListe"></div>
     <div class="reihe"><button class="knopf" id="bZu">Schließen</button></div>
+  </div>
+</div>
+<div id="nameDlg" hidden>
+  <div class="tafel" role="dialog" aria-labelledby="nTitel">
+    <h2 id="nTitel">Umbenennen</h2>
+    <p id="nText"></p>
+    <input id="nFeld" maxlength="14" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" aria-label="Neuer Name">
+    <p id="nFehler" class="fehlt"></p>
+    <div class="reihe"><button class="knopf" id="nZu">Abbrechen</button><button class="knopf" id="nOk">Speichern</button></div>
   </div>
 </div>
 <div id="dialog" hidden>
@@ -690,7 +710,11 @@ function klemme(){
   cam.y=(y1-y0<=h)?grenz(cam.y,y1-h,y0):grenz(cam.y,y0,y1-h);
 }
 function groesse(){
-  dpr=Math.min(window.devicePixelRatio||1,3);vw=window.innerWidth;vh=window.innerHeight;
+  // iOS-Web-App vom Home-Bildschirm: Mit durchscheinender Statusleiste ist die gemeldete Höhe um die Statusleiste zu klein,
+  // unten bliebe ein Streifen frei. Die Lücke wird gemessen und Bild und Leisten werden bis zum echten Rand verlängert.
+  const voll=innerWidth>innerHeight?Math.min(screen.width,screen.height):Math.max(screen.width,screen.height),l=navigator.standalone?voll-innerHeight:0,lu=l>0&&l<=80?l:0;
+  document.documentElement.style.setProperty('--luecke',lu+'px');
+  dpr=Math.min(window.devicePixelRatio||1,3);vw=window.innerWidth;vh=window.innerHeight+lu;
   cv.width=Math.round(vw*dpr);cv.height=Math.round(vh*dpr);if(innen){z=innenFit();innenMitte()}klemme();
 }
 addEventListener('resize',groesse);
@@ -2446,6 +2470,20 @@ function ausbauBlatt(nur){
         knopf:'Ausbauen',fehlt:stand.geld<p,fn:()=>{if(stand.geld<p)return;stand.geld-=p;stand.ausbau[h.id]=st+1;zaehle('ausbau');hud();sichern();sag(h.name+' ist jetzt „'+AUSBAU[st].name+'“.');ausbauBlatt(nur)}}}));
 }
 $('umzug').addEventListener('click',()=>umzugBlatt(sel()));
+// Umbenennen: eigenes kleines Fenster mit Eingabefeld (prompt() ist in eingebetteten Seiten oft gesperrt)
+let nameMini=null;
+function umbenennen(m){nameMini=m;$('nText').textContent='Wie soll '+m.name+' heißen? Höchstens 14 Zeichen.';$('nFeld').value=m.name;$('nFehler').textContent='';$('nameDlg').hidden=false;setTimeout(()=>{$('nFeld').focus();$('nFeld').select()},60)}
+function nameSpeichern(){
+  const m=nameMini;if(!m)return;const n=$('nFeld').value.replace(/\s+/g,' ').trim();
+  const f=!n?'Bitte gib einen Namen ein.':n.length>14?'Der Name ist zu lang.':minis.some(x=>x!==m&&x.name.toLowerCase()===n.toLowerCase())?'So heißt schon ein anderer Mini.':'';
+  if(f){$('nFehler').textContent=f;return}
+  const alt=m.name;nameMini=null;$('nameDlg').hidden=true;$('nFeld').blur();if(alt===n)return;
+  m.name=n;balken();sichern();sag(alt+' heißt jetzt '+n+'.');
+}
+$('umbenennen').addEventListener('click',()=>umbenennen(sel()));
+$('nOk').addEventListener('click',nameSpeichern);
+$('nZu').addEventListener('click',()=>{nameMini=null;$('nameDlg').hidden=true;$('nFeld').blur()});
+$('nFeld').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();nameSpeichern()}});
 $('innenAusbau').addEventListener('click',()=>ausbauBlatt(innen&&innen.id));
 function innenZu(){if(!innen)return;const a=innen.alt;innen=null;z=a.z;cam.x=a.x;cam.y=a.y;klemme();document.body.classList.remove('innen');$('hinweis').classList.add('aus')}
 $('innenRaus').addEventListener('click',innenZu);
