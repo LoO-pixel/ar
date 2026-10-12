@@ -21,15 +21,16 @@ body{margin:0;font-size:14px;-webkit-tap-highlight-color:transparent;-webkit-tou
 /* Layout: Vollbild-Canvas als Terrarium, HUD oben und Hinweis unten als Holztafeln */
 :root{
   --nacht:#1b2433; --holz:#5b3a21; --papier:#fff1d6; --tinte:#3b2414; --gold:#e0a21b; --gras:#4a9a55; --rot:#b8442f; --satt:#d98a1e; --sauber:#3d8fb8; --wach:#4a9a55; --froh:#c4517a;
-  /* --luecke: iOS-Web-App mit durchscheinender Statusleiste meldet die Höhe ohne Statusleiste; per Skript gesetzt */
-  --luecke:0px; --unten:calc(env(safe-area-inset-bottom,0px) - var(--luecke));
+  /* --luecke: iOS-Fehler bei Web-Apps vom Home-Bildschirm (WebKit 301994): das Fenster endet um die Statusleisten-Höhe zu früh,
+     darunter kann die Seite nichts zeichnen. Der Home-Balken liegt dann in dieser Lücke, unten braucht es keinen Sicherheitsabstand. */
+  --luecke:0px; --unten:max(0px,calc(env(safe-area-inset-bottom,0px) - var(--luecke)));
   --pixel:"Ziffern","Pixelify Sans","Courier New",monospace;
   color-scheme:dark;
 }
 html,body{height:100%}
 [hidden]{display:none!important}
 body{background:var(--nacht);color:var(--tinte);font-family:var(--pixel);overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none}
-canvas{position:fixed;inset:0;width:100%;height:calc(100% + var(--luecke));bottom:auto;touch-action:none;image-rendering:pixelated;display:block}
+canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none;image-rendering:pixelated;display:block}
 .tafel{border:12px solid transparent;border-image:var(--ui1) 10 fill / 12px stretch;image-rendering:pixelated;color:var(--tinte)}
 #hud{position:fixed;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top,0px) + 6px) 16px 0;display:flex;gap:4px;justify-content:space-between;align-items:flex-start;pointer-events:none}
 .chip{border:7px solid transparent;border-image:var(--ui1) 10 fill / 7px stretch;display:flex;align-items:baseline;gap:4px;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;background:none;padding:0 1px}
@@ -113,7 +114,7 @@ body.bauen #hinweis{bottom:calc(var(--unten) + 150px)}
 .posten span{font-size:13px;line-height:1.3;grid-column:1}
 .posten .knopf{grid-column:2;grid-row:1 / span 2;flex:none;min-width:84px;font-size:14px}
 .posten .fehlt{font-weight:600}
-#aktionen{position:fixed;left:0;right:0;bottom:calc(0px - var(--luecke));padding:0 16px calc(env(safe-area-inset-bottom,0px) + 6px);display:flex;gap:4px;justify-content:center}
+#aktionen{position:fixed;left:0;right:0;bottom:0;padding:0 16px calc(var(--unten) + 6px);display:flex;gap:4px;justify-content:center}
 #aktionen .knopf{flex:none;width:48px;height:48px;padding:0;border-width:7px;border-image-width:7px;display:grid;place-items:center}
 #aktionen .knopf i{display:block;width:32px;height:32px;background-size:32px 32px;background-repeat:no-repeat;image-rendering:pixelated}
 #aktionen{gap:6px}
@@ -146,7 +147,6 @@ body.bauen #hinweis{bottom:calc(var(--unten) + 150px)}
 body:not(.innen) #innenLeiste,body.innen #aktionen{display:none}
 @media (orientation:landscape) and (max-height:520px){#innenLeiste{left:auto;transform:none;right:max(16px,env(safe-area-inset-right,0px));flex-direction:column;gap:6px;padding:4px 2px}}
 @media (prefers-reduced-motion:reduce){#hinweis{transition:none}.chip.abholen{animation:none}}
-#blatt,#plan,#dialog,#nameDlg{bottom:calc(0px - var(--luecke))}
 </style>
 </head>
 <body>
@@ -710,11 +710,11 @@ function klemme(){
   cam.y=(y1-y0<=h)?grenz(cam.y,y1-h,y0):grenz(cam.y,y0,y1-h);
 }
 function groesse(){
-  // iOS-Web-App vom Home-Bildschirm: Mit durchscheinender Statusleiste ist die gemeldete Höhe um die Statusleiste zu klein,
-  // unten bliebe ein Streifen frei. Die Lücke wird gemessen und Bild und Leisten werden bis zum echten Rand verlängert.
+  // iOS-Web-App vom Home-Bildschirm: Wegen eines iOS-Fehlers endet das Fenster um die Statusleiste zu früh (darunter wird nichts gezeichnet).
+  // Die Lücke wird gemessen; dann fällt unten der Abstand zum Home-Balken weg, die Leisten rücken so tief wie möglich.
   const voll=innerWidth>innerHeight?Math.min(screen.width,screen.height):Math.max(screen.width,screen.height),l=navigator.standalone?voll-innerHeight:0,lu=l>0&&l<=80?l:0;
   document.documentElement.style.setProperty('--luecke',lu+'px');
-  dpr=Math.min(window.devicePixelRatio||1,3);vw=window.innerWidth;vh=window.innerHeight+lu;
+  dpr=Math.min(window.devicePixelRatio||1,3);vw=window.innerWidth;vh=window.innerHeight;
   cv.width=Math.round(vw*dpr);cv.height=Math.round(vh*dpr);if(innen){z=innenFit();innenMitte()}klemme();
 }
 addEventListener('resize',groesse);
