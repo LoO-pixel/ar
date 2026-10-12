@@ -365,7 +365,7 @@ if(!stand.erfolge)stand.erfolge={}; // id -> 1 geschafft, 2 abgeholt
 if(!stand.gesehen)stand.gesehen={w:{},j:{}};
 if(!Array.isArray(stand.offen))stand.offen=[]; // nicht abgeholte Belohnungen vergangener Tage
 // Tagesplan: Mahlzeiten für alle, je Mini feste Schlafenszeit und Termine; planLauf merkt sich, was heute schon lief
-if(!stand.plan)stand.plan={essen:[],minis:{}};if(!stand.planLauf)stand.planLauf={};if(!stand.planNr)stand.planNr=0;
+if(!stand.plan)stand.plan={essen:[],minis:{}};if(!stand.planLauf)stand.planLauf={};if(!stand.planStatus)stand.planStatus={};if(!stand.planNr)stand.planNr=0;
 // Einrichtung: beim ersten Start mit der Grundausstattung der Welt (Lampen, Bänke, Stühle …)
 if(!Array.isArray(stand.deko)){stand.deko=D.deko0.map((d,i)=>({id:i+1,k:d.k,x:d.x,y:d.y}));stand.dekoNr=stand.deko.length;stand.reihe3=1}
 if(!stand.reihe3){for(const d of D.deko0)if(d.y>=28)stand.deko.push({id:++stand.dekoNr,k:d.k,x:d.x,y:d.y});stand.reihe3=1} // alte Spielstände: Laternen usw. der dritten Reihe dazu
@@ -925,68 +925,121 @@ function platzSuchen([cx,cy],ok){ // nächster passender Platz in Ringen um die 
     if(x>=0&&y>=0&&x<W&&y<H&&istFrei(parzVon(x,y))&&ok(x,y))return [x,y]}
   return null;
 }
-function planEssen(e){
-  const art=ESSEN.find(x=>x.id===e.t);if(!art)return;
+// Ein Planeintrag ist heute erledigt, sobald planLauf[id] = heute ist. planStatus[id] = {tag, text} sagt, was heute damit passiert ist.
+// Kann ein Termin gerade nicht starten (Mini isst, ist zu müde, arbeitet noch), wird er alle 15 Sekunden neu versucht, bis zu einer Stunde lang.
+let aktivSeit=Date.now(); // seit wann das Spiel ohne Pause läuft: was davor begann, hat der Mini „verpasst, aber erledigt“
+const liveIds=new Set(); // in dieser Sitzung geänderte Einträge laufen immer live, nie nachträglich
+const WARTEN=60; // Minuten, so lange wird ein Termin nachgeholt
+const uhr=d=>String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+function planEssen(e){ // gibt einen kurzen Bericht zurück
+  const art=ESSEN.find(x=>x.id===e.t);if(!art)return 'Fällt aus: Dieses Essen gibt es nicht mehr.';
   const ort=stand.frei.includes(e.ort)?ESSORTE[e.ort]:ESSORTE.A,name=art.name.replace(' für alle','');
-  if((art.stufe||1)>stand.stufe){sag('Geplantes Essen fällt aus: '+name+' gibt es erst ab Stufe '+art.stufe+'.');return}
+  if((art.stufe||1)>stand.stufe)return 'Fällt aus: '+name+' gibt es erst ab Stufe '+art.stufe+'.';
   if(art.portionen){
-    if(stand.futter.length>=8){sag('Geplantes Essen fällt aus: Es steht schon genug herum.');return}
-    if(stand.geld<art.preis){sag('Geplantes Essen fällt aus: Für '+name+' fehlen Münzen.');return}
+    if(stand.futter.length>=8)return 'Fällt aus: Es steht schon genug Essen herum.';
+    if(stand.geld<art.preis)return 'Fällt aus: Für '+name+' fehlen Münzen.';
     const breit=Math.max(...art.flaeche.map(c=>c[0]))+1,p=platzSuchen([ort[1][0]-Math.floor((breit-1)/2),ort[1][1]],(x,y)=>buffetPasst(art,x,y)==='');
-    if(!p){sag('Geplantes Essen fällt aus: '+ort[0]+' ist kein Platz für '+name+'.');return}
-    buffetAufbauen(art,p[0],p[1]);sag('Laut Plan gibt es Essen: '+name+' ('+ort[0]+'). Alle dürfen sich bedienen.');return}
+    if(!p)return 'Fällt aus: '+ort[0]+' ist kein Platz für '+name+'.';
+    buffetAufbauen(art,p[0],p[1]);return name+' ist aufgebaut ('+ort[0]+').'}
   let n=0; // kleine Portionen: eine für jeden Mini, der da ist
   for(const m of minis){if(m.fort||m.klinik)continue;if(stand.futter.length>=8||stand.geld<art.preis)break;
     const p=platzSuchen(ort[1],(x,y)=>begehbar(x,y)&&!belegtVonEssen(x,y)&&!geschuetzt(x,y));if(!p)break;
     stand.geld-=art.preis;stand.futter.push({x:p[0],y:p[1],t:art.id});n++}
-  if(n){zaehle('fuettern',n);hud();sichern();sag('Laut Plan: '+n+'× '+art.name+' liegt bereit.')}
-  else sag('Geplantes Essen fällt aus: '+(stand.geld<art.preis?'Es fehlen Münzen.':'Kein Platz.'));
+  if(n){zaehle('fuettern',n);hud();sichern();return n+'× '+art.name+' liegt bereit.'}
+  return 'Fällt aus: '+(stand.geld<art.preis?'Es fehlen Münzen.':'Kein Platz.');
 }
+// Was hält einen Mini gerade fest? Leer = er kann los. Spielen und Plaudern dürfen unterbrochen werden.
+function planHindernis(m){
+  if(m.klinik)return 'liegt im Krankenhaus';
+  if(m.fort)return 'ist noch bei der Arbeit';
+  if(m.grund==='dusche'||(m.akt&&['dusche','baden'].includes(m.akt.typ)))return 'wäscht sich gerade';
+  if(m.akt&&m.akt.typ==='essen')return 'isst gerade';
+  if(m.akt&&['umgekippt','pruegel'].includes(m.akt.typ))return 'kann gerade nicht';
+  if(m.r&&m.r.akt&&['snack','kochen'].includes(m.r.akt.typ))return 'isst gerade';
+  return '';
+}
+function planLos(m){ // Spiel oder Plausch beenden, damit der Termin starten kann
+  if(m.akt&&m.akt.typ==='reden'){const o=minis.find(x=>x.id===m.akt.mit);if(o&&o.akt&&o.akt.typ==='reden')o.akt=null}
+  if(m.akt&&(m.akt.typ==='spiel'||m.akt.typ==='reden'))m.akt=null;
+  if(m.plan&&m.plan.typ==='spiel')m.plan=null;
+}
+// Rückgabe: {fertig:true, text} oder {warte:text}
 function planArbeit(m,e,t){
-  const j=JOBS.find(x=>x.id===e.job);if(!j)return;
-  if(m.fort){sag(m.name+' ist noch beschäftigt und verpasst die geplante Schicht.');return}
-  const f=jobFehlt(m,j);if(f){sag('Geplante Schicht fällt aus: '+m.name+', '+j.name+'. '+f+'.');return}
+  const j=JOBS.find(x=>x.id===e.job);if(!j)return {fertig:true,text:'Fällt aus: Diesen Job gibt es nicht mehr.'};
+  if(m.klinik)return {fertig:true,text:'Fällt aus: '+m.name+' liegt im Krankenhaus.'};
+  const f=jobFehlt(m,j);if(f)return {fertig:true,text:'Fällt aus: '+j.name+'. '+f+'.'};
   const d=new Date();d.setHours(0,0,0,0);const min=e.min||j.dauer,start=d.getTime()+t*60000,ende=start+min*60000,jetzt=Date.now(),o=ORTE[j.ort];
-  const hin=()=>{m.drin=false;m.grund='';m.akt=null;m.plan=null;m.pfad=[];m.tx=o.tile[0];m.ty=o.tile[1];m.x=m.tx*T;m.y=m.ty*T;m.job={id:j.id,ende,team:false,min};m.fort=true;tuerAuf(o.tuer)};
-  if(jetzt>=ende){hin();feierabend(m,true);return} // ganz verpasst, weil das Spiel zu war: die Schicht gilt als gearbeitet
-  if(jetzt-start<3*60000){ // pünktlich: läuft selbst hin
-    const s=schwachText(m)||langSchwach(m,min);if(s){sag('Geplante Schicht fällt aus: '+m.name+' '+s+'.');return}
-    if(m.grund==='dusche'||(m.akt&&m.akt.typ!=='reden')){m.akt=null}
-    arbeiten(m,j,min);return}
-  hin();sag('Laut Plan arbeitet '+m.name+' seit '+e.zeit+' '+o.im+'.');sichern(); // Spiel war zu: seit Schichtbeginn im Laden
+  const verpasst=start<aktivSeit-30000&&!liveIds.has(e.id); // Spiel war zu oder im Hintergrund, als die Schicht anfing
+  if(m.fort)return {warte:m.name+' ist noch bei der Arbeit'};
+  if(verpasst){
+    const hin=()=>{m.drin=false;m.grund='';m.r=null;m.akt=null;m.plan=null;m.pfad=[];m.tx=o.tile[0];m.ty=o.tile[1];m.x=m.tx*T;m.y=m.ty*T;m.job={id:j.id,ende,team:false,min};m.fort=true;tuerAuf(o.tuer)};
+    hin();if(jetzt>=ende){feierabend(m,true);return {fertig:true,text:j.name+' nachträglich gearbeitet ('+e.zeit+' bis '+uhr(new Date(ende))+').'}}
+    sichern();sag('Laut Plan arbeitet '+m.name+' seit '+e.zeit+' '+o.im+'.');return {fertig:true,text:'Arbeitet seit '+e.zeit+' '+o.im+'.'}}
+  const h=planHindernis(m);if(h)return {warte:m.name+' '+h};
+  const s=schwachText(m)||langSchwach(m,min);if(s)return {warte:m.name+' '+s};
+  planLos(m);
+  if(!arbeiten(m,j,min))return {warte:m.name+' findet gerade keinen Weg'};
+  return {fertig:true,text:'Um '+uhr(new Date())+' zur Arbeit gegangen: '+j.name+'.'};
 }
 function planTermin(m,e,t){
-  if(m.klinik){sag(m.name+' liegt im Krankenhaus und verpasst einen Termin.');return}
-  if(e.was==='arbeit'){planArbeit(m,e,t);return}
-  if(m.fort)return;
-  if(e.was==='waschen'){if(m.n.s>=90)return;wecken(m);const see=stand.frei.includes('B'),z=see?SEE:heimVon(m).tuer;
-    if(geheZu(m,z[0],z[1],{typ:see?'see':'dusche'}))sag('Laut Plan: '+m.name+(see?' geht im See baden.':' geht duschen.'));return}
+  if(e.was==='arbeit')return planArbeit(m,e,t);
+  if(m.klinik)return {fertig:true,text:'Fällt aus: '+m.name+' liegt im Krankenhaus.'};
+  const h=planHindernis(m);if(h)return {warte:m.name+' '+h};
+  if(e.was==='waschen'){if(m.n.s>=90)return {fertig:true,text:m.name+' war noch sauber.'};
+    planLos(m);wecken(m);const see=stand.frei.includes('B'),z=see?SEE:heimVon(m).tuer;
+    if(geheZu(m,z[0],z[1],{typ:see?'see':'dusche'})){sag('Laut Plan: '+m.name+(see?' geht im See baden.':' geht duschen.'));return {fertig:true,text:'Um '+uhr(new Date())+(see?' baden gegangen.':' duschen gegangen.')}}
+    return {warte:m.name+' findet gerade keinen Weg'}}
   if(e.was==='spielen'){const l=stand.deko.filter(d=>KAT[d.k].spiel&&istFrei(parzVon(d.x,d.y))).sort(()=>Math.random()-.5);
-    if(!l.length){sag(m.name+' wollte laut Plan spielen, aber es gibt kein Spielzeug.');return}
-    wecken(m);for(const d of l)if(spielen(m,d)){sag('Laut Plan: '+m.name+' geht '+KAT[d.k].zu+'.');return}}
+    if(!l.length)return {fertig:true,text:'Fällt aus: Es gibt noch kein Spielzeug.'};
+    planLos(m);wecken(m);for(const d of l)if(spielen(m,d)){sag('Laut Plan: '+m.name+' geht '+KAT[d.k].zu+'.');return {fertig:true,text:'Um '+uhr(new Date())+' spielen gegangen.'}}
+    return {warte:'alles Spielzeug ist gerade besetzt'}}
+  return {fertig:true,text:''};
 }
 function planPruefen(){
-  const jm=jetztMin(),tag=heute();
-  const faellig=(e,fenster)=>{const t=zeitMin(e.zeit);return stand.planLauf[e.id]!==tag&&jm>=t&&jm-t<=fenster};
-  for(const e of stand.plan.essen)if(faellig(e,120)){stand.planLauf[e.id]=tag;planEssen(e)}
+  if(!$('plan').hidden)return; // während du den Plan bearbeitest, startet nichts
+  const jm=jetztMin(),tag=heute(),S=stand.planStatus;let geaendert=false;
+  const offen=e=>stand.planLauf[e.id]!==tag&&jm>=zeitMin(e.zeit);
+  const fertig=(e,text)=>{stand.planLauf[e.id]=tag;S[e.id]={tag,text};geaendert=true};
+  for(const e of stand.plan.essen){if(!offen(e))continue;
+    if(jm-zeitMin(e.zeit)>120){fertig(e,'Verpasst.');continue}
+    const text=planEssen(e);fertig(e,text);sag('Laut Plan: '+text)}
   for(const m of minis){const p=stand.plan.minis[m.id];if(!p)continue;
-    for(const e of p.termine)if(faellig(e,e.was==='arbeit'?1440:60)){stand.planLauf[e.id]=tag;planTermin(m,e,zeitMin(e.zeit))}}
+    for(const e of p.termine){if(!offen(e))continue;const spaet=jm-zeitMin(e.zeit);
+      if(spaet>(e.was==='arbeit'?1440:WARTEN)){fertig(e,'Verpasst.');continue}
+      const r=planTermin(m,e,zeitMin(e.zeit));
+      if(r.fertig){fertig(e,r.text);if(/^Fällt aus/.test(r.text))sag('Geplant für '+m.name+': '+r.text);continue}
+      const vor=S[e.id]&&S[e.id].tag===tag?S[e.id].text:'';
+      if(spaet>=WARTEN){fertig(e,'Fällt aus: '+r.warte+'.');sag('Geplanter Termin fällt aus: '+r.warte+'.');continue}
+      const text='Wartet: '+r.warte+'.';
+      if(vor!==text){S[e.id]={tag,text};geaendert=true;sag('Geplant um '+e.zeit+': '+r.warte+'. Ich versuche es gleich wieder.')}}}
+  if(geaendert)sichern();
 }
 setInterval(planPruefen,15000);setTimeout(planPruefen,2500);
-// Bearbeiten: einfache Formularzeilen mit Uhrzeit und Auswahllisten
+// Bearbeiten: einfache Formularzeilen. Uhrzeiten werden nur gemerkt; ausgewertet wird beim Tippen auf „Fertig“.
+// Grund: iOS meldet beim Drehen am Zeitrad jede Zwischenzeit, das darf nichts auslösen und die Liste nicht neu aufbauen.
+let planEdit=null; // {felder:[[objekt, feld, input]], geaendert:Set, info:Map}
+function planInfo(e){
+  const t=zeitMin(e.zeit),jm=jetztMin(),tag=heute(),s=stand.planStatus[e.id];
+  if(planEdit&&planEdit.geaendert.has(e))return t>jm?'Heute um '+e.zeit+'.':t>=jm-10?'Startet, sobald du auf „Fertig“ tippst.':'Heute schon vorbei. Gilt ab morgen um '+e.zeit+'.';
+  if(stand.planLauf[e.id]===tag)return (s&&s.tag===tag&&s.text?'Heute: '+s.text+' ':'Für heute erledigt. ')+'Morgen wieder um '+e.zeit+'.';
+  if(s&&s.tag===tag)return s.text;
+  return t>jm?'Heute um '+e.zeit+'.':'Startet gleich.';
+}
+function planSync(){if(planEdit&&planEdit.felder)for(const [o,f,i] of planEdit.felder)if(i.value&&i.value!==o[f]){o[f]=i.value;if(f==='zeit')planEdit.geaendert.add(o)}}
 function planZeigen(){
+  planEdit=planEdit||{geaendert:new Set()};planSync();planEdit.felder=[];planEdit.info=new Map();
   const P=stand.plan,box=$('pInhalt');box.textContent='';
   const neu=(tag,eig)=>Object.assign(document.createElement(tag),eig||{});
-  // Uhrzeit geändert: liegt sie mehr als zwei Minuten zurück, gilt der Eintrag erst ab morgen, sonst läuft er heute noch
-  const geaendert=e=>{if(e&&e.zeit){if(zeitMin(e.zeit)<jetztMin()-2)stand.planLauf[e.id]=heute();else delete stand.planLauf[e.id]}sichern();setTimeout(planPruefen,400)};
   const bald=()=>{const t=Math.ceil((jetztMin()+1)/5)*5%1440;return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')}; // nächste volle fünf Minuten
-  const heuteFertig=e=>stand.planLauf[e.id]===heute()&&zeitMin(e.zeit)<=jetztMin()?neu('span',{className:'info',textContent:'Für heute vorbei, wieder morgen um '+e.zeit+'. Für heute noch: Uhrzeit in die Zukunft stellen.'}):null;
-  const zeit=(e,feld,nach)=>{const i=neu('input',{type:'time',value:e[feld],step:300});i.addEventListener('change',()=>{if(i.value){e[feld]=i.value;if(feld==='zeit'){geaendert(e);planZeigen()}if(nach)nach()}});return i};
+  const info=e=>{const s=neu('span',{className:'info',textContent:planInfo(e)});planEdit.info.set(e,s);return s};
+  const zeit=(e,feld)=>{const i=neu('input',{type:'time',value:e[feld],step:300});planEdit.felder.push([e,feld,i]);
+    const lies=()=>{if(!i.value||i.value===e[feld])return;e[feld]=i.value;if(feld==='zeit'){planEdit.geaendert.add(e);const s=planEdit.info.get(e);if(s)s.textContent=planInfo(e)}};
+    i.addEventListener('input',lies);i.addEventListener('change',lies);i.addEventListener('blur',lies);return i};
   const wahl=(liste,wert,nach)=>{const s=neu('select');for(const o of liste){if(o.gruppe){const g=neu('optgroup',{label:o.gruppe});for(const u of o.l)g.append(neu('option',{value:u.v,textContent:u.t,disabled:!!u.aus}));s.append(g)}else s.append(neu('option',{value:o.v,textContent:o.t,disabled:!!o.aus}))}
     s.value=wert;s.addEventListener('change',()=>nach(s.value));return s};
-  const weg=fn=>{const b=neu('button',{className:'x',textContent:'×',title:'Entfernen'});b.setAttribute('aria-label','Entfernen');b.addEventListener('click',()=>{fn();sichern();planZeigen()});return b};
+  const weg=fn=>{const b=neu('button',{className:'x',textContent:'×',title:'Entfernen'});b.setAttribute('aria-label','Entfernen');b.addEventListener('click',()=>{planSync();fn();sichern();planZeigen()});return b};
   const zeile=(...k)=>{const d=neu('div',{className:'pz'});d.append(...k.filter(Boolean));return d};
-  const plus=(text,fn)=>{const b=neu('button',{className:'knopf plus',textContent:text});b.addEventListener('click',()=>{fn();sichern();planZeigen()});return b};
+  const plus=(text,fn)=>{const b=neu('button',{className:'knopf plus',textContent:text});b.addEventListener('click',()=>{planSync();fn();sichern();planZeigen()});return b};
   const id=()=>'p'+(++stand.planNr);
   // Mahlzeiten
   box.append(neu('h3',{textContent:'Mahlzeiten für alle'}),neu('p',{className:'klein',textContent:'Zur Uhrzeit wird das Essen automatisch aufgebaut und bezahlt. Kleine Portionen gibt es einmal für jeden Mini.'}));
@@ -995,34 +1048,46 @@ function planZeigen(){
     const art=ESSEN.find(x=>x.id===e.t);
     box.append(zeile(zeit(e,'zeit'),wahl(PLANESSEN.map(k=>{const a=ESSEN.find(x=>x.id===k);return {v:k,t:a.name.replace(' für alle','')+' · '+a.preis+(a.portionen?'':' je Mini'),aus:(a.stufe||1)>stand.stufe}}),e.t,v=>{e.t=v;sichern()}),
       wahl(orte,stand.frei.includes(e.ort)?e.ort:'A',v=>{e.ort=v;sichern()}),weg(()=>{P.essen=P.essen.filter(x=>x!==e)}),
-      (art.stufe||1)>stand.stufe?neu('span',{className:'fehlt',textContent:'Erst ab Stufe '+art.stufe+'.'}):heuteFertig(e)));
+      (art.stufe||1)>stand.stufe?neu('span',{className:'fehlt',textContent:'Erst ab Stufe '+art.stufe+'.'}):info(e)));
   }
-  box.append(plus('+ Mahlzeit',()=>{const e={id:id(),zeit:bald(),t:'picknick',ort:'A'};P.essen.push(e);geaendert(e)}));
+  box.append(plus('+ Mahlzeit',()=>{const e={id:id(),zeit:bald(),t:'picknick',ort:'A'};P.essen.push(e);planEdit.geaendert.add(e)}));
   // je Mini
   for(const m of minis){
     const p=P.minis[m.id]||(P.minis[m.id]={schlaf:null,termine:[]});
     box.append(neu('h3',{textContent:m.name}));
-    const sz=zeile(neu('label',{textContent:'Schlafen:'}),wahl([{v:'gefuehl',t:'Nach Gefühl'},{v:'fest',t:'Feste Zeit'}],p.schlaf?'fest':'gefuehl',v=>{p.schlaf=v==='fest'?{von:'22:00',bis:'07:00'}:null;sichern();planZeigen()}));
-    if(p.schlaf)sz.append(zeit(p.schlaf,'von',sichern),neu('label',{textContent:'bis'}),zeit(p.schlaf,'bis',sichern),neu('span',{className:'info',textContent:'Zur Weckzeit steht '+m.name+' auf, außer die Energie ist ganz unten.'}));
+    const sz=zeile(neu('label',{textContent:'Schlafen:'}),wahl([{v:'gefuehl',t:'Nach Gefühl'},{v:'fest',t:'Feste Zeit'}],p.schlaf?'fest':'gefuehl',v=>{planSync();p.schlaf=v==='fest'?{von:'22:00',bis:'07:00'}:null;sichern();planZeigen()}));
+    if(p.schlaf)sz.append(zeit(p.schlaf,'von'),neu('label',{textContent:'bis'}),zeit(p.schlaf,'bis'),neu('span',{className:'info',textContent:'Zur Weckzeit steht '+m.name+' auf, außer die Energie ist ganz unten.'}));
     box.append(sz);
     for(const e of p.termine){
-      const k=[zeit(e,'zeit'),wahl([{v:'arbeit',t:'Arbeiten'},{v:'waschen',t:'Waschen'},{v:'spielen',t:'Spielen'}],e.was,v=>{e.was=v;if(v==='arbeit'&&!e.job){e.job='lager';e.min=JOBS[0].dauer}sichern();planZeigen()})];
+      const k=[zeit(e,'zeit'),wahl([{v:'arbeit',t:'Arbeiten'},{v:'waschen',t:'Waschen'},{v:'spielen',t:'Spielen'}],e.was,v=>{planSync();e.was=v;if(v==='arbeit'&&!e.job){e.job='lager';e.min=JOBS[0].dauer}sichern();planZeigen()})];
       let fehlt='';
       if(e.was==='arbeit'){
         const j=JOBS.find(x=>x.id===e.job)||JOBS[0];
-        k.push(wahl(Object.keys(ORTE).map(o=>({gruppe:ORTE[o].name,l:JOBS.filter(x=>x.ort===o).map(x=>({v:x.id,t:x.name,aus:!!jobFehlt(m,x)}))})),j.id,v=>{e.job=v;const nj=JOBS.find(x=>x.id===v);if(!(e.min===nj.dauer||SCHICHTEN.includes(e.min)&&e.min>nj.dauer))e.min=nj.dauer;sichern();planZeigen()}));
+        k.push(wahl(Object.keys(ORTE).map(o=>({gruppe:ORTE[o].name,l:JOBS.filter(x=>x.ort===o).map(x=>({v:x.id,t:x.name,aus:!!jobFehlt(m,x)}))})),j.id,v=>{planSync();e.job=v;const nj=JOBS.find(x=>x.id===v);if(!(e.min===nj.dauer||SCHICHTEN.includes(e.min)&&e.min>nj.dauer))e.min=nj.dauer;sichern();planZeigen()}));
         k.push(wahl([j.dauer].concat(SCHICHTEN.filter(x=>x>j.dauer)).map(x=>({v:String(x),t:(x===j.dauer?'Kurz, ':'')+dauerName(x)+' · '+muenzen(lohnVon(m,j,false,x))})),String(e.min||j.dauer),v=>{e.min=Number(v);sichern()}));
         fehlt=jobFehlt(m,j);
       }
       k.push(weg(()=>{p.termine=p.termine.filter(x=>x!==e)}));
-      if(fehlt)k.push(neu('span',{className:'fehlt',textContent:'Geht noch nicht: '+fehlt+'.'}));else k.push(heuteFertig(e));
+      k.push(fehlt?neu('span',{className:'fehlt',textContent:'Geht noch nicht: '+fehlt+'.'}):info(e));
       box.append(zeile(...k));
     }
-    box.append(plus('+ Termin',()=>{const e={id:id(),zeit:bald(),was:'arbeit',job:'lager',min:JOBS[0].dauer};p.termine.push(e);geaendert(e)}));
+    box.append(plus('+ Termin',()=>{const e={id:id(),zeit:bald(),was:'arbeit',job:'lager',min:JOBS[0].dauer};p.termine.push(e);planEdit.geaendert.add(e)}));
   }
 }
-$('aPlan').addEventListener('click',()=>{planZeigen();$('plan').hidden=false});
-$('pZu').addEventListener('click',()=>{$('plan').hidden=true;sichern();planPruefen();sag('Tagesplan gespeichert.')});
+$('aPlan').addEventListener('click',()=>{planEdit=null;planZeigen();$('plan').hidden=false});
+$('pZu').addEventListener('click',()=>{
+  planSync();
+  if(planEdit){const jm=jetztMin();
+    // geänderte Uhrzeit: bis zehn Minuten zurück läuft der Eintrag heute noch (sofort), weiter zurück erst ab morgen
+    for(const e of planEdit.geaendert){if(!e.id)continue;delete stand.planStatus[e.id];liveIds.add(e.id);
+      if(zeitMin(e.zeit)>=jm-10)delete stand.planLauf[e.id];else stand.planLauf[e.id]=heute()}}
+  planEdit=null;
+  // Einträge, die es nicht mehr gibt, vergessen
+  const ids=new Set(stand.plan.essen.map(e=>e.id).concat(...Object.values(stand.plan.minis).map(p=>p.termine.map(e=>e.id))));
+  for(const k of Object.keys(stand.planStatus))if(!ids.has(k))delete stand.planStatus[k];
+  for(const k of Object.keys(stand.planLauf))if(!ids.has(k))delete stand.planLauf[k];
+  $('plan').hidden=true;sichern();sag('Tagesplan gespeichert.');planPruefen(); // Meldungen vom Plan kommen danach und bleiben sichtbar
+});
 // ---------- Neue Minis ----------
 // Preis richtet sich nach der Summe der Werte
 function neuesAngebot(){
@@ -2429,7 +2494,7 @@ function nachholen(dt){
   if(sek<1)return;
   const std=Math.min(8,sek/3600);
   for(const m of minis)if(!m.klinik)beduerfnisse(m.n,std,schlaeftDrin(m),15,launeBonus(m),raten(m));
-  if(sek>=60)setTimeout(planPruefen,500);
+  if(sek>=60){aktivSeit=Date.now();setTimeout(planPruefen,500)}
   if(sek>=60)sag('Du warst '+(std<1?Math.round(std*60)+' Minuten':std.toFixed(1).replace('.',',')+' Stunden')+' weg.');
   balken();sichern();
 }
