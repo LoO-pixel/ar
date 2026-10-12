@@ -1645,6 +1645,45 @@ function symbol(typ,x,y){ // kleine Pixel-Zeichen für Sprechblasen
 }
 function blase(typ,x,y){ctx.fillStyle='#3b2414';ctx.fillRect(x-1,y-1,12,11);ctx.fillRect(x+3,y+10,3,2);ctx.fillStyle='#fff1d6';ctx.fillRect(x,y,10,9);ctx.fillRect(x+4,y+9,1,2);symbol(typ,x+2,y+2)}
 const blasen=[]; // Sprechblasen werden gesammelt und zuletzt über alles gezeichnet
+// ---------- Zeitschilder: Schlaf bis voll, Restzeit der Schicht ----------
+const SCHLAFRATE=40; // Energie pro Stunde im Schlaf, siehe beduerfnisse()
+const dauerText=min=>{const g=Math.ceil(min);return min<=0?'gleich':g<60?g+' Min':Math.floor(g/60)+':'+String(g%60).padStart(2,'0')+' Std'};
+const weckZeit=m=>hat(m,'nachteule')?'8:00':hat(m,'morgenmuffel')?'7:30':'6:00';
+function schlafText(m){
+  if(m.n.e<99.5)return 'voll in '+dauerText((100-m.n.e)/SCHLAFRATE*60);
+  return bettzeit(m,stunde())?'wach um '+weckZeit(m):'wacht auf';
+}
+function ortPunkt(o){ // über der Tür des Ladens
+  const tu=D.objs.find(x=>x.d===ORTE[o].tuer);if(!tu)return [ORTE[o].tile[0]*T+8,ORTE[o].tile[1]*T-24];
+  return [tu.x*T+D.apos[tu.n][1]/2,tu.y*T-4];
+}
+function zeichneTimer(){
+  const g=grenz(1.6/z,.5,2.4),schilder=[];
+  for(const h of HEIME){const l=minis.filter(m=>m.drin&&m.heim===h.id&&m.grund!=='dusche'&&!m.fort);
+    l.forEach((m,i)=>schilder.push({x:h.zz[0]*T,y:h.zz[1]*T-12,i,n:l.length,text:m.name+' · '+schlafText(m),wert:m.n.e/100,art:'schlaf'}))}
+  for(const o in ORTE){const l=minis.filter(m=>m.fort&&m.job&&!m.klinik&&jobVon(m).ort===o);if(!l.length)continue;const [x,y]=ortPunkt(o);
+    l.forEach((m,i)=>{const j=jobVon(m),rest=Math.max(0,(m.job.ende-Date.now())/60000);schilder.push({x,y,i,n:l.length,text:m.name+' · noch '+restText(m)+' Min',wert:1-rest/j.dauer,art:'arbeit'})})}
+  ctx.font='600 7px "Pixelify Sans",monospace';ctx.textAlign='left';
+  const sx0=cam.x-30,sx1=cam.x+vw/z+30,sy0=cam.y-20,sy1=cam.y+vh/z+60;
+  for(const s of schilder){
+    if(s.x<sx0||s.x>sx1||s.y<sy0||s.y>sy1)continue; // Haus oder Laden nicht im Bild: kein Schild
+    const w=Math.ceil(ctx.measureText(s.text).width)+13,hh=13,schritt=(hh+3)*g;
+    // gestapelt, oberstes Schild bleibt im Terrarium
+    let y0=s.y-(s.n-1-s.i)*schritt;const oben=Math.max(4,cam.y+40/z)+hh*g;if(s.y-(s.n-1)*schritt<oben)y0=oben+s.i*schritt;
+    const hw=(w/2+2)*g,li=Math.max(cam.x,0)+hw,re=Math.min(cam.x+vw/z,W*T)-hw,x0=li<re?grenz(s.x,li,re):s.x;
+    ctx.save();ctx.translate(Math.round(x0),Math.round(y0));ctx.scale(g,g);
+    const l=-Math.round(w/2);
+    ctx.fillStyle='#3b2414';ctx.fillRect(l-1,-hh-1,w+2,hh+2);ctx.fillStyle='#fff1d6';ctx.fillRect(l,-hh,w,hh);
+    // Symbol: Z für Schlaf, Uhr für Arbeit
+    const ix=l+2,iy=-hh+2;
+    if(s.art==='schlaf'){ctx.fillStyle='#3d6fb8';ctx.fillRect(ix,iy,5,1);ctx.fillRect(ix+3,iy+1,1,1);ctx.fillRect(ix+2,iy+2,1,1);ctx.fillRect(ix+1,iy+3,1,1);ctx.fillRect(ix,iy+4,5,1)}
+    else{ctx.fillStyle='#3b2414';ctx.fillRect(ix+1,iy,3,1);ctx.fillRect(ix,iy+1,1,3);ctx.fillRect(ix+4,iy+1,1,3);ctx.fillRect(ix+1,iy+4,3,1);ctx.fillRect(ix+2,iy+1,1,2);ctx.fillRect(ix+3,iy+2,1,1)}
+    ctx.fillStyle='#3b2414';ctx.fillText(s.text,l+9,-hh+7);
+    // Fortschritt: Energie beim Schlaf, verstrichene Schicht bei der Arbeit
+    ctx.fillStyle='#d9c6a2';ctx.fillRect(l+1,-3,w-2,2);ctx.fillStyle=s.art==='schlaf'?'#4a9a55':'#e0a21b';ctx.fillRect(l+1,-3,Math.round((w-2)*grenz(s.wert,0,1)),2);
+    ctx.restore();
+  }
+}
 function zeichneBlasen(){
   const g=grenz(1.6/z,.5,2.4); // auf dem Bildschirm immer etwa gleich groß
   ctx.font='600 7px "Pixelify Sans",monospace';ctx.textAlign='center';
@@ -1786,6 +1825,7 @@ function zeichne(t){
   if(schnuppe){const p=(performance.now()-schnuppe.t0)/1100;if(p>1)schnuppe=null;else{
     ctx.save();ctx.setTransform(dpr,0,0,dpr,0,0);const x=vw*(.15+.55*p),y=vh*(.16+.2*p),g=ctx.createLinearGradient(x-70,y-26,x,y);
     g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(1,'rgba(255,250,220,'+(1-p*.6)+')');ctx.strokeStyle=g;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-70,y-26);ctx.lineTo(x,y);ctx.stroke();ctx.fillStyle='#fffbe6';ctx.fillRect(x-1,y-1,3,3);ctx.restore()}}
+  zeichneTimer();
   zeichneBlasen();
   // Gesperrte Parzellen
   for(const p of PARZ){ if(istFrei(p))continue;
@@ -1831,7 +1871,18 @@ function terrarium(){
   ctx.fillStyle='#3b2414';ctx.font='600 8px "Pixelify Sans",monospace';ctx.textAlign='center';ctx.fillText('MINI-TERRARIUM',px,h+32);
 }
 let zuletzt=0;
-function runde(ms){const t=ms/1000,dt=Math.min(.1,t-zuletzt);zuletzt=t;
+// Läuft die Seite im Hintergrund, bleibt die Bildschleife stehen. Die verpasste Zeit wird beim Zurückkommen nachgerechnet,
+// genauso wie beim Öffnen des Spiels (höchstens 8 Stunden, Bedürfnisse fallen dabei nicht unter 15).
+let echtZuletzt=Date.now();
+function nachholen(dt){
+  const jetzt=Date.now(),sek=(jetzt-echtZuletzt)/1000-dt;echtZuletzt=jetzt;
+  if(sek<1)return;
+  const std=Math.min(8,sek/3600);
+  for(const m of minis)if(!m.klinik)beduerfnisse(m.n,std,m.drin&&m.grund!=='dusche',15,launeBonus(m),raten(m));
+  if(sek>=60)sag('Du warst '+(std<1?Math.round(std*60)+' Minuten':std.toFixed(1).replace('.',',')+' Stunden')+' weg.');
+  balken();sichern();
+}
+function runde(ms){const t=ms/1000,dt=Math.min(.1,t-zuletzt);zuletzt=t;nachholen(Math.max(0,dt));
   if(gleit){const ax=cam.x,ay=cam.y;cam.x+=gleit.vx*dt;cam.y+=gleit.vy*dt;klemme();const b=Math.pow(.998,dt*1000);gleit.vx*=b;gleit.vy*=b;
     if(cam.x===ax)gleit.vx=0;if(cam.y===ay)gleit.vy=0;if(Math.hypot(gleit.vx,gleit.vy)*z<12)gleit=null}schritt(dt);zeichne(t);requestAnimationFrame(runde)}
 groesse();hud();balken();
