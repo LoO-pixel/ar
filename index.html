@@ -910,7 +910,7 @@ function zeige(m){if(m.fort||innen)return;const h=m.drin?wohnOrt(m):null,x=h?h.t
 
 // ---------- Eingabe ----------
 let zeig=null,marke=null,legen=null;
-function wecken(m){if(schlaeftDrin(m))aufwachen(m);m.wachBis=performance.now()+90000}
+function wecken(m){delete m.nickerchenBis;if(schlaeftDrin(m))aufwachen(m);m.wachBis=performance.now()+90000}
 function waehle(m,kamera){stand.wahl=m.id;balken();if(kamera)zeige(m)}
 let gleit=null; // Nachgleiten nach dem Wischen: Geschwindigkeit in Weltpixeln pro Sekunde
 let kneif=null; // Zwei-Finger-Zoom
@@ -1189,6 +1189,7 @@ function platzSuchen([cx,cy],ok){ // nächster passender Platz in Ringen um die 
 let aktivSeit=Date.now(); // seit wann das Spiel ohne Pause läuft: was davor begann, hat der Mini „verpasst, aber erledigt“
 const liveIds=new Map(); // id -> Tag: gerade auf „jetzt“ oder kurz davor gestellt, startet live (der Mini läuft los)
 const WARTEN=60; // Minuten, so lange wird ein Termin nachgeholt
+const NICKER=[15,30,45,60,90,120]; // wählbare Längen fürs geplante Nickerchen
 const uhr=d=>String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
 function planEssen(e){ // gibt einen kurzen Bericht zurück
   const art=ESSEN.find(x=>x.id===e.t);if(!art)return 'Fällt aus: Dieses Essen gibt es nicht mehr.';
@@ -1244,6 +1245,16 @@ function planTermin(m,e,t){
   if(e.was==='arbeit')return planArbeit(m,e,t);
   if(m.klinik)return {fertig:true,text:'Fällt aus: '+m.name+' liegt im Krankenhaus.'};
   const h=planHindernis(m);if(h)return {warte:m.name+' '+h};
+  if(e.was==='nickerchen'){ // Schläfchen: ins eigene Bett, Wecker auf Startzeit plus Dauer
+    const d=new Date();d.setHours(0,0,0,0);const bis=d.getTime()+(t+(e.min||30))*60000;
+    if(Date.now()>bis-5*60000)return {fertig:true,text:'Verpasst.'};
+    if(m.fort)return {warte:m.name+' ist noch bei der Arbeit'};
+    m.nickerchenBis=bis;
+    if(schlaeftDrin(m))return {fertig:true,text:'Schläft schon, Wecker auf '+uhr(new Date(bis))+'.'};
+    planLos(m);
+    if(m.r&&m.r.id===m.heim&&bettVon(m)!==undefined&&raumZiel(m,{o:bettVon(m)})){sag('Laut Plan: '+m.name+' macht ein Nickerchen bis '+uhr(new Date(bis))+'.');return {fertig:true,text:'Um '+uhr(new Date())+' hingelegt, bis '+uhr(new Date(bis))+'.'}}
+    const td=heimVon(m).tuer;if(geheZu(m,td[0],td[1],{typ:'schlaf'})){sag('Laut Plan: '+m.name+' macht ein Nickerchen bis '+uhr(new Date(bis))+'.');return {fertig:true,text:'Um '+uhr(new Date())+' hingelegt, bis '+uhr(new Date(bis))+'.'}}
+    delete m.nickerchenBis;return {warte:m.name+' findet gerade keinen Weg'}}
   if(e.was==='waschen'){if(m.n.s>=90)return {fertig:true,text:m.name+' war noch sauber.'};
     planLos(m);wecken(m);const see=stand.frei.includes('B'),z=see?SEE:heimVon(m).tuer;
     if(geheZu(m,z[0],z[1],{typ:see?'see':'dusche'})){sag('Laut Plan: '+m.name+(see?' geht im See baden.':' geht duschen.'));return {fertig:true,text:'Um '+uhr(new Date())+(see?' baden gegangen.':' duschen gegangen.')}}
@@ -1319,8 +1330,9 @@ function planZeigen(){
     if(p.schlaf)sz.append(zeit(p.schlaf,'von'),neu('label',{textContent:'bis'}),zeit(p.schlaf,'bis'),neu('span',{className:'info',textContent:'Zur Weckzeit steht '+m.name+' auf, außer die Energie ist ganz unten.'}));
     box.append(sz);
     for(const e of p.termine){
-      const k=[zeit(e,'zeit'),wahl([{v:'arbeit',t:'Arbeiten'},{v:'waschen',t:'Waschen'},{v:'spielen',t:'Spielen'}],e.was,v=>{planSync();e.was=v;if(v==='arbeit'&&!e.job){e.job='lager';e.min=JOBS[0].dauer}sichern();planZeigen()})];
+      const k=[zeit(e,'zeit'),wahl([{v:'arbeit',t:'Arbeiten'},{v:'nickerchen',t:'Nickerchen'},{v:'waschen',t:'Waschen'},{v:'spielen',t:'Spielen'}],e.was,v=>{planSync();e.was=v;if(v==='arbeit'&&!e.job){e.job='lager';e.min=JOBS[0].dauer}if(v==='nickerchen')e.min=NICKER.includes(e.min)?e.min:30;sichern();planZeigen()})];
       let fehlt='';
+      if(e.was==='nickerchen')k.push(wahl(NICKER.map(x=>({v:String(x),t:dauerName(x)})),String(e.min||30),v=>{e.min=Number(v);sichern()}));
       if(e.was==='arbeit'){
         const j=JOBS.find(x=>x.id===e.job)||JOBS[0];
         k.push(wahl(Object.keys(ORTE).map(o=>({gruppe:ORTE[o].name,l:JOBS.filter(x=>x.ort===o).map(x=>({v:x.id,t:x.name,aus:!!jobFehlt(m,x)}))})),j.id,v=>{planSync();e.job=v;const nj=JOBS.find(x=>x.id===v);if(!(e.min===nj.dauer||SCHICHTEN.includes(e.min)&&e.min>nj.dauer))e.min=nj.dauer;sichern();planZeigen()}));
@@ -1340,7 +1352,7 @@ function planZeigen(){
   box.append(neu('h3',{textContent:'Gespeicherte Tagespläne'}));
   if(!V.length)box.append(neu('p',{className:'klein',textContent:'Noch keine. Unter jedem Mini kannst du seinen Plan mit einem Namen speichern und ihn dann für andere übernehmen.'}));
   V.forEach((v,i)=>{
-    const was=v.termine.map(e=>e.zeit+' '+(e.was==='arbeit'?(JOBS.find(j=>j.id===e.job)||{name:'Arbeit'}).name:e.was==='waschen'?'Waschen':'Spielen')).join(', ');
+    const was=v.termine.map(e=>e.zeit+' '+(e.was==='arbeit'?(JOBS.find(j=>j.id===e.job)||{name:'Arbeit'}).name:e.was==='nickerchen'?'Nickerchen '+dauerName(e.min||30):e.was==='waschen'?'Waschen':'Spielen')).join(', ');
     box.append(zeile(neu('b',{textContent:v.name}),neu('span',{className:'info',textContent:(v.schlaf?'Schlaf '+v.schlaf.von+'–'+v.schlaf.bis:'Schlaf nach Gefühl')+(was?' · '+was:' · keine Termine')}),
       weg(()=>{V.splice(i,1)})));
     box.append(zeile(neu('label',{textContent:'Übernehmen für:'}),wahl([{v:'',t:'Mini wählen …'},{v:'alle',t:'Alle Minis'}].concat(minis.map(m=>({v:String(m.id),t:m.name}))),'',x=>{if(!x)return;laden(v,x==='alle'?minis.slice():minis.filter(m=>String(m.id)===x))})));
@@ -2022,7 +2034,9 @@ function schrittMini(m,dt,h){
   }
   if(m.drin){
     // Aufwachen: ausgeschlafen und nicht mehr Nacht
-    if(schlaeft&&!bettzeit(m,h)&&(N.e>=100||(m.grund==='nacht'&&planSchlaf(m)&&N.e>=30))){aufwachen(m);ep(5,m.name+' ist ausgeschlafen');zaehle('schlaf');sichern()}
+    const nicker=m.nickerchenBis&&Date.now()<m.nickerchenBis;
+    if(m.nickerchenBis&&!nicker){delete m.nickerchenBis;if(schlaeft&&!bettzeit(m,h)&&N.e>=10){aufwachen(m);sag(m.name+' ist vom Nickerchen aufgewacht.');ep(3);sichern()}}
+    else if(schlaeft&&!nicker&&!bettzeit(m,h)&&(N.e>=100||(m.grund==='nacht'&&planSchlaf(m)&&N.e>=30))){aufwachen(m);ep(5,m.name+' ist ausgeschlafen');zaehle('schlaf');sichern()}
     return;
   }
   // Eigene Entscheidungen, Reihenfolge = Dringlichkeit
